@@ -27,6 +27,24 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {
             "section": {"type": "string", "description": "章节名, 缺省返回全文"}}, "required": []},
     }, {
+        "name": "keel_file_put",
+        "description": "(P1)写入单文件到项目空间(契约/旅程/context), 含沙箱(路径限定+1MB+保留路径禁写)与乐观锁",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string"},
+            "path": {"type": "string", "description": "相对项目根路径, 如 contracts/invariants.json"},
+            "content": {"type": "string"},
+            "encoding": {"type": "string", "description": "utf8|base64, 默认 utf8"},
+            "create_dirs": {"type": "boolean", "description": "默认 true"},
+            "expected_version": {"type": "integer", "description": "乐观锁: 期望当前文件版本号, 不匹配报 VERSION_CONFICT"},
+        }, "required": ["project", "path", "content"]},
+    }, {
+        "name": "keel_file_get",
+        "description": "(P1)回读项目空间文件, 返回 content/version/size/mtime/truncated",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string"},
+            "path": {"type": "string"},
+        }, "required": ["project", "path"]},
+    }, {
         "name": "keel_project_create",
         "description": "(先调 keel_guide 看工作流) 创建 Keel 项目空间(环境登记+契约/旅程模板+状态事实源)",
         "inputSchema": {"type": "object", "properties": {
@@ -127,6 +145,20 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
         from .guide import get_guide
         out = get_guide(str(args.get("section", "")))
         return {"ok": True, "exitCode": 0, "output": out}
+    if name in ("keel_file_put", "keel_file_get"):
+        from .fileops import FileOpError, file_get, file_put
+        try:
+            out = (file_put(root, args["project"], args["path"], args["content"],
+                            encoding=args.get("encoding", "utf8"),
+                            create_dirs=args.get("create_dirs", True),
+                            expected_version=args.get("expected_version"))
+                   if name == "keel_file_put" else
+                   file_get(root, args["project"], args["path"]))
+            out = {"ok": True, "exitCode": 0, **out}
+        except FileOpError as e:
+            out = {"ok": False, "exitCode": 1, "error": e.code, "message": e.message}
+        audit(name, args, out["ok"], root)
+        return out
     if name not in _ARGV:
         return {"ok": False, "error": f"unknown tool {name}"}
     # 防线①: context_path 必须落在 root 内且为 .json

@@ -34,6 +34,9 @@ GUIDE = """# Keel 快速上手(给 agent / 测试工程师)
 - `issueRepo`: "owner/repo" — issue_sync 的目标仓
 
 ## 常见坑
+- **信任边界(必读)**: `keel_file_put` 可写 `tests/journeys.py`——而 journeys.py 会被
+  Keel 动态 import 执行。因此 Bearer token 持有者 = 可在 Keel 服务器上执行任意代码。
+  仅限可信局域网使用; token 即写权限, 不要泄露给不信任的一方。
 - journeys.py 模板端点是占位, 必须先改
 - envAuth 没配 → 全部请求 401
 - issue_sync 需先跑过 journey_run(有报告才能同步)

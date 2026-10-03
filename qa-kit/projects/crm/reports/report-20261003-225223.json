@@ -1,0 +1,37 @@
+{
+ "title": "crm · 旅程回归",
+ "date": "2026-10-03",
+ "conclusion": "存在失败/中止@J0 越权与多租户/冒烟",
+ "stats": {
+  "passed": 0,
+  "total": 1,
+  "failed": 1,
+  "P2 一般": 1
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 0,
+   "total": 1,
+   "failed": [
+    "冒烟 (异常)"
+   ],
+   "checks": [
+    {
+     "name": "冒烟 (异常)",
+     "ok": false,
+     "evidence": "ApiError: 404 NOT_FOUND 接口不存在"
+    }
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-冒烟 (异常)",
+   "severity": "P2 一般",
+   "title": "冒烟 (异常)",
+   "evidence": "ApiError: 404 NOT_FOUND 接口不存在",
+   "suggestion": ""
+  }
+ ]
+}

@@ -61,7 +61,7 @@ class TestMcpServer(unittest.TestCase):
         for expect in ("keel_project_create", "keel_status_get", "keel_journey_run",
                        "keel_contract_verify", "keel_report_render", "keel_issue_sync"):
             self.assertIn(expect, names)
-        self.assertEqual(len(names), 7)  # guide + 六生命周期
+        self.assertEqual(len(names), 9)  # guide + 六生命周期 + file_put/get
 
     def test_02_create_and_run_over_mcp(self):
         r = self.client.call("keel_project_create",
@@ -137,3 +137,77 @@ class TestGuide(unittest.TestCase):
         names = [t["name"] for t in TOOLS]
         self.assertEqual(names[0], "keel_guide")
         self.assertIn("先调 keel_guide", [t["description"] for t in TOOLS if t["name"] == "keel_project_create"][0])
+
+
+class TestFileOps(unittest.TestCase):
+    """F1-F7 验收: file_put/file_get 沙箱与乐观锁。"""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        from keel.fileops import file_put
+        import tempfile
+        from keel.project import KeelProject
+        cls.root = tempfile.mkdtemp(prefix="keel_fo_")
+        KeelProject.create(cls.root, "fo")
+        file_put(cls.root, "fo", "contracts/invariants.json",
+                 '{"invariants": [{"id": "INV-1", "status": "confirmed",'
+                 ' "rule": "test", "check": {"left": 1, "op": "==", "right": 1}}]}')
+
+    def test_F1_normal_put_get_roundtrip(self):
+        from keel.fileops import file_get, file_put
+        r = file_put(self.root, "fo", "tests/journeys.py", "# test\n")
+        self.assertTrue(r["ok"])
+        g = file_get(self.root, "fo", "tests/journeys.py")
+        self.assertIn("test", g["content"])
+        self.assertEqual(g["version"], 0)  # 非 JSON 无版本号
+
+    def test_F2_path_escape_rejected(self):
+        from keel.fileops import file_put, FileOpError
+        for bad in ("../../evil.py", "/abs/path.py", "..\..\win.py"):
+            with self.assertRaises(FileOpError) as ctx:
+                file_put(self.root, "fo", bad, "x")
+            self.assertEqual(ctx.exception.code, "PATH_ESCAPED")
+
+    def test_F3_reserved_path_rejected(self):
+        from keel.fileops import file_put, FileOpError
+        for path in ("project.json", "reports/report-1.json"):
+            with self.assertRaises(FileOpError) as ctx:
+                file_put(self.root, "fo", path, "{}")
+            self.assertEqual(ctx.exception.code, "RESERVED_PATH")
+
+    def test_F4_too_large(self):
+        from keel.fileops import file_put, FileOpError
+        with self.assertRaises(FileOpError) as ctx:
+            file_put(self.root, "fo", "big.txt", "x" * (1024 * 1024 + 1))
+        self.assertEqual(ctx.exception.code, "FILE_TOO_LARGE")
+
+    def test_F5_optimistic_lock(self):
+        from keel.fileops import file_put, FileOpError
+        file_put(self.root, "fo", "lock.json", '{"v": 1}')
+        # 错误版本号
+        with self.assertRaises(FileOpError) as ctx:
+            file_put(self.root, "fo", "lock.json", '{"v": 2}', expected_version=99)
+        self.assertEqual(ctx.exception.code, "VERSION_CONFLICT")
+        # 正确版本号
+        r = file_put(self.root, "fo", "lock.json", '{"v": 2}', expected_version=0)
+        self.assertTrue(r["ok"])
+
+    def test_F6_project_not_found(self):
+        from keel.fileops import file_put, FileOpError
+        with self.assertRaises(FileOpError) as ctx:
+            file_put(self.root, "ghost", "x.txt", "y")
+        self.assertEqual(ctx.exception.code, "PROJECT_NOT_FOUND")
+
+    def test_F7_mcp_end_to_end(self):
+        """真实 MCP HTTP 全链: file_put → tools/list 可见 → file_get 回读。"""
+        r = call_tool("keel_file_put", {
+            "project": "fo", "path": "e2e.txt", "content": "hello"}, root=self.root)
+        self.assertTrue(r["ok"])
+        r = call_tool("keel_file_get", {"project": "fo", "path": "e2e.txt"}, root=self.root)
+        self.assertTrue(r["ok"])
+        self.assertIn("hello", r["content"])
+        # 工具面确认
+        names = [t["name"] for t in TOOLS]
+        self.assertIn("keel_file_put", names)
+        self.assertIn("keel_file_get", names)

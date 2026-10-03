@@ -1,6 +1,21 @@
 {
  "baseline": null,
- "lastRun": null,
+ "lastRun": {
+  "time": "2026-10-03 22:52:23",
+  "journey": "crm 穿行",
+  "ok": false,
+  "passed": 0,
+  "total": 1,
+  "abortedAt": "J0 越权与多租户/冒烟",
+  "report": "projects\\crm\\reports\\report-20261003-225223.json"
+ },
  "contractVersion": 0,
- "runs": []
+ "runs": [
+  {
+   "time": "2026-10-03 22:52:23",
+   "ok": false,
+   "passed": 0,
+   "total": 1
+  }
+ ]
 }
