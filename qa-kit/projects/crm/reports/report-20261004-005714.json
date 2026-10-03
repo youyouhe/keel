@@ -1,0 +1,135 @@
+{
+ "title": "crm · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "存在失败/中止@J2 档案域/公海认领(互斥)",
+ "stats": {
+  "passed": 8,
+  "total": 10,
+  "failed": 2,
+  "P2 一般": 2
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J0-主管可读客户列表",
+     "ok": true,
+     "evidence": "GET /api/v1/customers → 200"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 4,
+   "total": 5,
+   "failed": [
+    "J1-usci重复409含既有编号"
+   ],
+   "checks": [
+    {
+     "name": "J1-建档201",
+     "ok": true,
+     "evidence": "POST /api/v1/leads → 201;服务端 curl/vitest 均为 201(v0.10 客户端已修 201→200,此处保持严格 201)"
+    },
+    {
+     "name": "J1-初态待开发",
+     "ok": true,
+     "evidence": "leadStatus=待开发线索"
+    },
+    {
+     "name": "J1-编号XS月流水",
+     "ok": true,
+     "evidence": "leadNo=XS202610-0016"
+    },
+    {
+     "name": "J1-归属本人",
+     "ok": true,
+     "evidence": "ownerId=2, li=2, isPublic=False"
+    },
+    {
+     "name": "J1-usci重复409含既有编号",
+     "ok": false,
+     "evidence": "dup → 409, message=None"
+    }
+   ]
+  },
+  {
+   "name": "J2 档案域",
+   "passed": 3,
+   "total": 4,
+   "failed": [
+    "公海认领(互斥) (异常)"
+   ],
+   "checks": [
+    {
+     "name": "J2-回退单201",
+     "ok": true,
+     "evidence": "return → 201, no=TH202610-0004;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J2-回退审批通过",
+     "ok": true,
+     "evidence": "decide → 已通过"
+    },
+    {
+     "name": "J2-已入公海",
+     "ok": true,
+     "evidence": "pool total=1"
+    },
+    {
+     "name": "公海认领(互斥) (异常)",
+     "ok": false,
+     "evidence": "KeyError: 'error'"
+    }
+   ]
+  },
+  {
+   "name": "J3 业务单据循环",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J4 周期关账",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J5 季度/年度汇总",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-J1-usci重复409含既有编号",
+   "severity": "P2 一般",
+   "title": "J1-usci重复409含既有编号",
+   "evidence": "dup → 409, message=None",
+   "suggestion": ""
+  },
+  {
+   "id": "F-公海认领(互斥) (异常)",
+   "severity": "P2 一般",
+   "title": "公海认领(互斥) (异常)",
+   "evidence": "KeyError: 'error'",
+   "suggestion": ""
+  }
+ ]
+}

@@ -17,5 +17,11 @@
    "R05",
    "R06"
   ]
+ },
+ "ui": {
+  "cmd": "pnpm exec playwright test --reporter=line 2>&1",
+  "cwd": "C:/Users/Administrator/qa-20260102/msp-playwright",
+  "timeoutSec": 120,
+  "gating": true
  }
 }

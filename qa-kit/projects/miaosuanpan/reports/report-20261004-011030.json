@@ -1,0 +1,90 @@
+{
+ "title": "miaosuanpan · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "全绿",
+ "stats": {
+  "passed": 9,
+  "total": 9,
+  "failed": 0
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 4,
+   "total": 4,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J0] demo-login + 账套清单=3",
+     "ok": true,
+     "evidence": "200"
+    },
+    {
+     "name": "[J0] as_999 → 403/404",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 无权访问该账套"
+    },
+    {
+     "name": "[J0] 缺省 appasid → 拒",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 无权访问该账套"
+    },
+    {
+     "name": "[J0] R04 越权写 → 403",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 角色 R04 无权限点 voucher:write"
+    }
+   ]
+  },
+  {
+   "name": "J7 报表勾稽",
+   "passed": 3,
+   "total": 3,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J7] 试算三层平衡",
+     "ok": true,
+     "evidence": "{'initialDiff': 0, 'closingDiff': 0, 'balanced': True}"
+    },
+    {
+     "name": "[J7] 存货对账 allMatched",
+     "ok": true,
+     "evidence": ""
+    },
+    {
+     "name": "[J7] 资金勾稽双行 matched",
+     "ok": true,
+     "evidence": "[]"
+    }
+   ]
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[平台] MCP 工具=43",
+     "ok": true,
+     "evidence": "n=43"
+    }
+   ]
+  },
+  {
+   "name": "UI 冒烟(壳调)",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[UI] 冒烟(退出码=0)",
+     "ok": true,
+     "evidence": "elapsed=18.8s | \n[9/11] [msp] › tests\\msp.spec.ts:44:1 › ⑧ 档案: 辅助核算四类可达\n[10/11] [msp] › tests\\msp.spec.ts:52:1 › ⑨ 税务: 申报页加载\n[11/11] [msp] › tests\\msp.spec.ts:57:1 › ⑩ 设置: 已结账期间列表(202601/202602)\n  11 passed (16.4s)\n\n"
+    }
+   ]
+  }
+ ],
+ "findings": []
+}

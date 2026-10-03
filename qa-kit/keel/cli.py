@@ -106,9 +106,20 @@ def cmd_journey_run(a):
         if not journey._sections:
             sys.exit(f"无匹配段: {a.section}")
     result = journey.run()
+    # P2.1: UI 冒烟段(壳调外部 UI 测试, 未配置则跳过)
+    from .ui_runner import run_ui_smoke, ui_configured
+    all_runs = list(result.runs)
+    if ui_configured(p.meta):
+        ui_run = run_ui_smoke(p.meta, p.root)
+        all_runs.append(ui_run)
+        # UI 失败影响 journey 整体判定(除非 ui.gating=false)
+        ui_gating = (p.meta.get("ui") or {}).get("gating", True)
+        if ui_gating and ui_run.failed:
+            result.aborted_at = result.aborted_at or f"UI冒烟/{ui_run.failed[0].name}"
     # 汇总为报告落盘
     report = Report(f"{p.meta['name']} · 旅程回归", conclusion=(
-        "全绿" if result.ok else f"存在失败/中止@{result.aborted_at}"), runs=result.runs,
+        "全绿" if result.ok and all(not r.failed for r in all_runs)
+        else f"存在失败/中止@{result.aborted_at}"), runs=all_runs,
         findings=[Finding(f"F-{c.name[:40]}", Severity.P2, c.name, str(c.evidence), "")
                   for r in result.runs for c in r.failed])
     ts = time.strftime("%Y%m%d-%H%M%S")
@@ -116,8 +127,8 @@ def cmd_journey_run(a):
     report.to_json(str(jp))
     hp = jp.with_suffix(".html")
     hp.write_text(report.render_html(), encoding="utf-8")
-    total = sum(len(r.checks) for r in result.runs)
-    passed = sum(r.passed for r in result.runs)
+    total = sum(len(r.checks) for r in all_runs)
+    passed = sum(r.passed for r in all_runs)
     p.record_run(journey.name, result.ok, passed, total, result.aborted_at, str(jp))
     print(result.summary())
     print(f"报告: {jp}")

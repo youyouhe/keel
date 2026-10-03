@@ -1,0 +1,254 @@
+{
+ "title": "crm · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "全绿",
+ "stats": {
+  "passed": 37,
+  "total": 37,
+  "failed": 0
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J0-主管可读客户列表",
+     "ok": true,
+     "evidence": "GET /api/v1/customers → 200"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 5,
+   "total": 5,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J1-建档201",
+     "ok": true,
+     "evidence": "POST /api/v1/leads → 201;服务端 curl/vitest 均为 201(v0.10 客户端已修 201→200,此处保持严格 201)"
+    },
+    {
+     "name": "J1-初态待开发",
+     "ok": true,
+     "evidence": "leadStatus=待开发线索"
+    },
+    {
+     "name": "J1-编号XS月流水",
+     "ok": true,
+     "evidence": "leadNo=XS202610-0018"
+    },
+    {
+     "name": "J1-归属本人",
+     "ok": true,
+     "evidence": "ownerId=2, li=2, isPublic=False"
+    },
+    {
+     "name": "J1-usci重复409含既有编号",
+     "ok": true,
+     "evidence": "dup → 409, message=该统一社会信用代码已存在线索 XS202610-0018"
+    }
+   ]
+  },
+  {
+   "name": "J2 档案域",
+   "passed": 5,
+   "total": 5,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J2-回退单201",
+     "ok": true,
+     "evidence": "return → 201, no=TH202610-0005;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J2-回退审批通过",
+     "ok": true,
+     "evidence": "decide → 已通过"
+    },
+    {
+     "name": "J2-已入公海",
+     "ok": true,
+     "evidence": "pool total=1"
+    },
+    {
+     "name": "J2-认领互斥一成一拒",
+     "ok": true,
+     "evidence": "claim#1 → 200 no=RL202610-0005; claim#2 → 409 code=CLAIM_RACE_LOST"
+    },
+    {
+     "name": "J2-移出公海",
+     "ok": true,
+     "evidence": "pool total=0"
+    }
+   ]
+  },
+  {
+   "name": "J3 业务单据循环",
+   "passed": 3,
+   "total": 3,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J3-挂载建档201",
+     "ok": true,
+     "evidence": "POST /api/v1/contacts → 201;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J3-列表脱敏138****0002",
+     "ok": true,
+     "evidence": "total=1, phone=138****0002"
+    },
+    {
+     "name": "J3-同对象同名409",
+     "ok": true,
+     "evidence": "dup → 409"
+    }
+   ]
+  },
+  {
+   "name": "J4 周期关账",
+   "passed": 11,
+   "total": 11,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J4-商机线索200",
+     "ok": true,
+     "evidence": "status → {'leadStatus': '商机线索'}"
+    },
+    {
+     "name": "J4-待开发线索禁转化400",
+     "ok": true,
+     "evidence": "convert(待开发) → 400"
+    },
+    {
+     "name": "J4-转无效原因合规200",
+     "ok": true,
+     "evidence": "→ 200"
+    },
+    {
+     "name": "J4-无效激活仅主管(403/200)",
+     "ok": true,
+     "evidence": "R01 → 403, R02 → 200"
+    },
+    {
+     "name": "J4-同状态迁移400",
+     "ok": true,
+     "evidence": "→ 400"
+    },
+    {
+     "name": "J4-转化201",
+     "ok": true,
+     "evidence": "POST /api/v1/customers → 201, no=KH202610-0005;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J4-带出与初态及联系人落客户",
+     "ok": true,
+     "evidence": "companyName=KEEL穿行公司, status=未成交, contacts=1"
+    },
+    {
+     "name": "J4-禁再转化409(LEAD_ALREADY_CONVERTED)",
+     "ok": true,
+     "evidence": "again → 409, code=LEAD_ALREADY_CONVERTED"
+    },
+    {
+     "name": "J4-线索回写客户",
+     "ok": true,
+     "evidence": "customerId=5 vs 5"
+    },
+    {
+     "name": "J4-下游保护400",
+     "ok": true,
+     "evidence": "置无效 → 400"
+    },
+    {
+     "name": "J4-商机不可回退待开发400",
+     "ok": true,
+     "evidence": "→ 400"
+    }
+   ]
+  },
+  {
+   "name": "J5 季度/年度汇总",
+   "passed": 8,
+   "total": 8,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J5-转交单201",
+     "ok": true,
+     "evidence": "transfer → 201, no=ZJ202610-0004;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J5-转交审批通过",
+     "ok": true,
+     "evidence": "decide → 已通过"
+    },
+    {
+     "name": "J5-回退单201",
+     "ok": true,
+     "evidence": "return → 201, no=TH202610-0004;保持严格 201(v0.10 已修)"
+    },
+    {
+     "name": "J5-回退审批通过",
+     "ok": true,
+     "evidence": "decide → 已通过"
+    },
+    {
+     "name": "J5-认领回抢200",
+     "ok": true,
+     "evidence": "claim → 200, no=RL202610-0004"
+    },
+    {
+     "name": "J5-认领后归属回王",
+     "ok": true,
+     "evidence": "ownerId=3, wang=3"
+    },
+    {
+     "name": "J5-留痕四动作齐全",
+     "ok": true,
+     "evidence": "actions=['create', 'transfer', 'return', 'claim']"
+    },
+    {
+     "name": "J5-留痕单据号可互查",
+     "ok": true,
+     "evidence": "refs=[None, 'ZJ202610-0004', 'TH202610-0004', 'RL202610-0004']"
+    }
+   ]
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 4,
+   "total": 4,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J9-越权读客户403(97ac7e5回归)",
+     "ok": true,
+     "evidence": "R01a GET /api/v1/customers/5 → 403"
+    },
+    {
+     "name": "J9-主管可读200",
+     "ok": true,
+     "evidence": "R02 → 200"
+    },
+    {
+     "name": "J9-越权读联系人403",
+     "ok": true,
+     "evidence": "R01a GET /api/v1/contacts/6 → 403"
+    },
+    {
+     "name": "J9-列表行级隔离",
+     "ok": true,
+     "evidence": "total=1, excluded=5"
+    }
+   ]
+  }
+ ],
+ "findings": []
+}
