@@ -59,6 +59,20 @@ print(run.summary())
 - ✅ report 序列化(to_json/from_dict) + CLI(`python -m keel render-report report.json -o report.html`)
 - ✅ ../frontend/index.html：静态查看器(拖 report.json+invariants.json 即渲染, 零构建, Playwright 冒烟通过)
 
+## v0.4 已交付 — 生命周期 CLI(manager agent / 人的统一入口)
+
+```bash
+keel new <A> --env-dev http://... --issue-repo owner/repo   # 项目空间+环境登记+契约/旅程模板
+keel status <A>                                              # 上轮结果/历史绿率/基线指纹
+keel contract verify <A> --context ctx.json                  # 契约不变量编译勾稽断言
+keel journey run <A> [--section J3]                          # 全量或按段跑, 产 report+state
+keel report render <A> [-o out.html]                         # 最新报告 → HTML
+keel issue sync <A> --repo owner/repo [--dry-run]            # 失败项 → gh issue(幂等去重, label keel:auto)
+```
+
+项目空间 `projects/<A>/`(project.json 环境登记 · contracts/ · tests/journeys.py 领域插件 ·
+reports/ · state.json 状态事实源)。v0.5 候选: keel-mcp server(同一核心的 MCP 壳)。
+
 ## 下一步（v0.3 候选）
 
 - [ ] invariants.yaml 加载器 + 编译为勾稽断言（contracts/ 规范落地）

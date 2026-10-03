@@ -1,0 +1,107 @@
+"""keel.project — 项目空间(manager agent 的状态事实源)
+
+projects/<A>/
+├── project.json     # 环境登记(dev/test 地址)、issue 仓、元信息
+├── contracts/       # invariants.json / roles / journeys 契约
+├── tests/journeys.py  # build_journey(api) -> Journey (领域插件)
+├── reports/         # 每轮 report-<ts>.json / .html
+└── state.json       # 基线指纹 / 上轮结果 / 契约版本(manager 查状态不靠记忆)
+"""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+JOURNEY_TEMPLATE = '''"""{name} 领域旅程插件 — keel journey run 会加载 build_journey。"""
+from keel import Journey, Step
+
+
+def build_journey(api) -> Journey:
+    j = Journey("{name} 穿行")
+
+    def smoke(run):
+        r = api.get("/api/v1/health")          # 换成你的端点
+        run.check("冒烟: 健康检查", r.ok, r.status)
+
+    j.register("J0 越权与多租户", [Step("冒烟", smoke)])
+    # 按 9 段骨架继续注册: j.register("J2 档案域", [...]) ...
+    return j
+'''
+
+INVARIANTS_TEMPLATE = [
+    {"id": "INV-EXAMPLE-1", "rule": "示例: 列表接口返回 200",
+     "check": {"left": {"path": "status"}, "op": "==", "right": 200},
+     "version": 1, "status": "draft"},
+]
+
+
+@dataclass
+class KeelProject:
+    root: Path
+
+    @classmethod
+    def create(cls, root: str | Path, name: str, env_dev: str = "",
+               issue_repo: str = "") -> "KeelProject":
+        p = Path(root) / name
+        if p.exists():
+            raise FileExistsError(f"项目已存在: {p}")
+        (p / "contracts").mkdir(parents=True)
+        (p / "tests").mkdir(parents=True)
+        (p / "reports").mkdir(parents=True)
+        (p / "project.json").write_text(json.dumps({
+            "name": name, "createdAt": time.strftime("%Y-%m-%d %H:%M"),
+            "env": {"dev": env_dev, "test": ""},
+            "issueRepo": issue_repo,
+        }, ensure_ascii=False, indent=1), encoding="utf-8")
+        (p / "contracts" / "invariants.json").write_text(
+            json.dumps(INVARIANTS_TEMPLATE, ensure_ascii=False, indent=1), encoding="utf-8")
+        (p / "tests" / "journeys.py").write_text(
+            JOURNEY_TEMPLATE.format(name=name), encoding="utf-8")
+        (p / "state.json").write_text(json.dumps({
+            "baseline": None, "lastRun": None, "contractVersion": 0, "runs": [],
+        }, ensure_ascii=False, indent=1), encoding="utf-8")
+        return cls(p)
+
+    # ---- 元信息 ----
+    @property
+    def meta(self) -> dict[str, Any]:
+        return json.loads((self.root / "project.json").read_text(encoding="utf-8"))
+
+    @property
+    def state(self) -> dict[str, Any]:
+        return json.loads((self.root / "state.json").read_text(encoding="utf-8"))
+
+    def save_state(self, st: dict[str, Any]) -> None:
+        (self.root / "state.json").write_text(
+            json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    # ---- 旅程执行 ----
+    def load_journey(self):
+        """动态加载 tests/journeys.py 的 build_journey(api)。"""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            f"keel_journey_{self.root.name}", self.root / "tests" / "journeys.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def record_run(self, journey: str, ok: bool, passed: int, total: int,
+                   aborted_at: str | None, report_path: str) -> None:
+        st = self.state
+        st["lastRun"] = {
+            "time": time.strftime("%Y-%m-%d %H:%M:%S"), "journey": journey,
+            "ok": ok, "passed": passed, "total": total,
+            "abortedAt": aborted_at, "report": report_path,
+        }
+        st["runs"].append({"time": st["lastRun"]["time"], "ok": ok,
+                           "passed": passed, "total": total})
+        st["runs"] = st["runs"][-50:]          # 只留最近 50 轮
+        self.save_state(st)
+
+    # ---- 报告 ----
+    def latest_report_json(self) -> Path | None:
+        cands = sorted((self.root / "reports").glob("report-*.json"))
+        return cands[-1] if cands else None
