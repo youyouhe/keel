@@ -1,13 +1,13 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-03 22:52:23",
+  "time": "2026-10-04 00:32:31",
   "journey": "crm 穿行",
   "ok": false,
-  "passed": 0,
-  "total": 1,
-  "abortedAt": "J0 越权与多租户/冒烟",
-  "report": "projects\\crm\\reports\\report-20261003-225223.json"
+  "passed": 4,
+  "total": 6,
+  "abortedAt": "J1 主数据建账守卫/录入线索",
+  "report": "projects\\crm\\reports\\report-20261004-003231.json"
  },
  "contractVersion": 0,
  "runs": [
@@ -16,6 +16,42 @@
    "ok": false,
    "passed": 0,
    "total": 1
+  },
+  {
+   "time": "2026-10-04 00:20:12",
+   "ok": false,
+   "passed": 0,
+   "total": 1
+  },
+  {
+   "time": "2026-10-04 00:23:43",
+   "ok": false,
+   "passed": 1,
+   "total": 2
+  },
+  {
+   "time": "2026-10-04 00:23:58",
+   "ok": false,
+   "passed": 1,
+   "total": 3
+  },
+  {
+   "time": "2026-10-04 00:24:11",
+   "ok": false,
+   "passed": 1,
+   "total": 3
+  },
+  {
+   "time": "2026-10-04 00:24:46",
+   "ok": false,
+   "passed": 4,
+   "total": 6
+  },
+  {
+   "time": "2026-10-04 00:32:31",
+   "ok": false,
+   "passed": 4,
+   "total": 6
   }
  ]
 }

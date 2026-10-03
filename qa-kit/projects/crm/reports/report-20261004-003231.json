@@ -1,0 +1,113 @@
+{
+ "title": "crm · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "存在失败/中止@J1 主数据建账守卫/录入线索",
+ "stats": {
+  "passed": 4,
+  "total": 6,
+  "failed": 2,
+  "P2 一般": 2
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J0-主管可读客户列表",
+     "ok": true,
+     "evidence": "GET /api/v1/customers → 200"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 3,
+   "total": 5,
+   "failed": [
+    "J1-建档201",
+    "录入线索 (异常)"
+   ],
+   "checks": [
+    {
+     "name": "J1-建档201",
+     "ok": false,
+     "evidence": "POST /api/v1/leads → 200"
+    },
+    {
+     "name": "J1-初态待开发",
+     "ok": true,
+     "evidence": "leadStatus=待开发线索"
+    },
+    {
+     "name": "J1-编号XS月流水",
+     "ok": true,
+     "evidence": "leadNo=XS202610-0008"
+    },
+    {
+     "name": "J1-归属本人",
+     "ok": true,
+     "evidence": "ownerId=2, li=2, isPublic=False"
+    },
+    {
+     "name": "录入线索 (异常)",
+     "ok": false,
+     "evidence": "ApiError: 409 USCI_DUPLICATED 该统一社会信用代码已存在线索 XS202610-0008"
+    }
+   ]
+  },
+  {
+   "name": "J2 档案域",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J3 业务单据循环",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J4 周期关账",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J5 季度/年度汇总",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-J1-建档201",
+   "severity": "P2 一般",
+   "title": "J1-建档201",
+   "evidence": "POST /api/v1/leads → 200",
+   "suggestion": ""
+  },
+  {
+   "id": "F-录入线索 (异常)",
+   "severity": "P2 一般",
+   "title": "录入线索 (异常)",
+   "evidence": "ApiError: 409 USCI_DUPLICATED 该统一社会信用代码已存在线索 XS202610-0008",
+   "suggestion": ""
+  }
+ ]
+}

@@ -45,6 +45,12 @@ TOOLS = [
             "path": {"type": "string"},
         }, "required": ["project", "path"]},
     }, {
+        "name": "keel_journey_status",
+        "description": "查询异步旅程作业状态: running/done/failed; done 时含报告路径与断言摘要",
+        "inputSchema": {"type": "object", "properties": {
+            "jobId": {"type": "string", "description": "journey_run 返回的 jobId"},
+        }, "required": ["jobId"]},
+    }, {
         "name": "keel_project_config",
         "description": "(P1.6)远端修改项目 envAuth/env 配置(字段白名单+schema校验+敏感值掩码), "
                        "解决 file_put 不能写 project.json 导致的闭环断点",
@@ -69,7 +75,7 @@ TOOLS = [
             "project": {"type": "string"}}, "required": ["project"]},
     }, {
         "name": "keel_journey_run",
-        "description": "(先调 keel_guide 看工作流) 执行旅程回归(全量或按骨架段), 自动落报告并更新状态; 返回摘要",
+        "description": "(异步)提交旅程回归, 立即返回 jobId; 用 keel_journey_status(jobId) 轮询结果",
         "inputSchema": {"type": "object", "properties": {
             "project": {"type": "string"},
             "section": {"type": "string", "description": "骨架段过滤, 如 J3; 缺省全量"},
@@ -167,6 +173,49 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
             out = {"ok": False, "exitCode": 1, "error": e.code, "message": e.message}
         audit(name, args, out["ok"], root)
         return out
+    if name == "keel_journey_status":
+        from .jobs import manager as job_mgr
+        st = job_mgr.status(str(args.get("jobId", "")))
+        if st is None:
+            return {"ok": False, "exitCode": 1,
+                    "error": "JOB_NOT_FOUND", "message": f"作业不存在: {args.get('jobId')!r}"}
+        return {"ok": True, "exitCode": 0, **st}
+
+    if name == "keel_journey_run":
+        # 异步: 后台线程执行, 立即返回 jobId(解决 MCP 长跑超时)
+        from .jobs import manager as job_mgr
+
+        def _run_journey():
+            buf = contextlib.redirect_stdout(__import__("io").StringIO()).__enter__() or __import__("io").StringIO()
+            code = 0
+            try:
+                with contextlib.redirect_stdout(buf):
+                    cli_main(["--root", root, "journey", "run", args["project"],
+                              *([] if not args.get("section") else ["--section", args["section"]]),
+                              *(["--env", args["env"]] if args.get("env") else [])])
+            except SystemExit as e:
+                code = e.code or 0
+            output = buf.getvalue().strip()
+            # 提取报告路径(最后一行 "报告: path")
+            report_path = ""
+            for line in reversed(output.splitlines()):
+                if line.startswith("报告:") or line.startswith("报告："):
+                    report_path = line.split(":", 1)[-1].split("：", 1)[-1].strip()
+                    break
+            # 提取摘要
+            summary_line = ""
+            for line in reversed(output.splitlines()):
+                if "/" in line and ("断言" in line or "passed" in line or "中止" in line or "完成" in line):
+                    summary_line = line.strip()
+                    break
+            return {"output_tail": output[-800:], "report": report_path,
+                    "summary": summary_line, "exitCode": code}
+
+        job_id = job_mgr.submit("journey_run", _run_journey)
+        audit(name, args, True, root)
+        return {"ok": True, "exitCode": 0, "jobId": job_id, "state": "running",
+                "hint": f"用 keel_journey_status 查询: jobId={job_id}"}
+
     if name in ("keel_file_put", "keel_file_get"):
         from .fileops import FileOpError, file_get, file_put
         try:

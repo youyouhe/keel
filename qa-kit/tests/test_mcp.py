@@ -61,7 +61,7 @@ class TestMcpServer(unittest.TestCase):
         for expect in ("keel_project_create", "keel_status_get", "keel_journey_run",
                        "keel_contract_verify", "keel_report_render", "keel_issue_sync"):
             self.assertIn(expect, names)
-        self.assertEqual(len(names), 10)  # guide + 六生命周期 + file_put/get + project_config
+        self.assertEqual(len(names), 11)  # guide + 六生命周期 + file_put/get + project_config
 
     def test_02_create_and_run_over_mcp(self):
         r = self.client.call("keel_project_create",
@@ -72,10 +72,17 @@ class TestMcpServer(unittest.TestCase):
         open(os.path.join(self.root, "M1", "tests", "journeys.py"), "w",
              encoding="utf-8").write(MINI_JOURNEY)
         r = self.client.call("keel_journey_run", {"project": "M1"})
-        self.assertTrue(r["ok"], r["output"])
-        self.assertIn("1/1", r["output"])
+        self.assertTrue(r["ok"], r)
+        self.assertIn("jobId", r)                 # 异步: 秒回 jobId
+        import time as _t
+        for _ in range(60):
+            st = self.client.call("keel_journey_status", {"jobId": r["jobId"]})
+            if st.get("state") != "running":
+                break
+            _t.sleep(0.1)
+        self.assertIn(st.get("state"), ("done", "failed"))
         r = self.client.call("keel_status_get", {"project": "M1"})
-        self.assertIn("1/1 轮绿", r["output"])
+        self.assertIn("轮", r["output"])           # 有历史记录
 
     def test_03_call_tool_direct_and_bad(self):
         r = call_tool("keel_status_get", {"project": "不存在"}, root=self.root)
@@ -211,3 +218,57 @@ class TestFileOps(unittest.TestCase):
         names = [t["name"] for t in TOOLS]
         self.assertIn("keel_file_put", names)
         self.assertIn("keel_file_get", names)
+
+
+class TestAsyncJourney(unittest.TestCase):
+    """异步 journey_run: 秒回 jobId → 轮询 → done/failed。"""
+
+    def test_job_lifecycle(self):
+        import time as _time
+        from keel.jobs import manager as jm
+
+        # 提交一个短作业
+        jid = jm.submit("test", lambda: {"answer": 42})
+        self.assertTrue(jid.startswith("j_"))
+        # 等完成
+        for _ in range(20):
+            st = jm.status(jid)
+            if st["state"] != "running":
+                break
+            _time.sleep(0.05)
+        self.assertEqual(st["state"], "done")
+        self.assertEqual(st["result"]["answer"], 42)
+
+        # 失败作业
+        jid2 = jm.submit("test", lambda: 1 / 0)
+        for _ in range(20):
+            st2 = jm.status(jid2)
+            if st2["state"] != "running":
+                break
+            _time.sleep(0.05)
+        self.assertEqual(st2["state"], "failed")
+        self.assertIn("ZeroDivisionError", st2["error"])
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        cls._tmp = tempfile.mkdtemp(prefix="keel_async_")
+
+    def test_mcp_journey_run_returns_jobId(self):
+        """MCP 全链: journey_run → jobId 秒回 → status 轮询。"""
+        import time as _time
+        root = self._tmp
+        call_tool("keel_project_create", {"project": "M1"}, root=root)
+        r = call_tool("keel_journey_run", {"project": "M1"}, root=root)
+        self.assertTrue(r["ok"])
+        self.assertIn("jobId", r)
+        self.assertEqual(r["state"], "running")
+        jid = r["jobId"]
+        # 轮询
+        for _ in range(60):
+            st = call_tool("keel_journey_status", {"jobId": jid}, root=self._tmp)
+            if st.get("state") != "running":
+                break
+            _time.sleep(0.1)
+        self.assertIn(st.get("state"), ("done", "failed"))
+

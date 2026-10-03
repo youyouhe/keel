@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from .primitives import TestRun
+from .journeys import Journey
 from .report import Finding, Report, Severity
 
 DEFAULT_ROOT = "projects"
@@ -96,7 +97,10 @@ def cmd_journey_run(a):
     p = _proj(a)
     mod = p.load_journey()
     api = _env_api(p.meta, a.env, project_root=p.root)
-    journey = mod.build_journey(api)
+    from .journeys import JourneyBuilder
+    builder = JourneyBuilder(api, f"{p.meta['name']} 穿行")
+    result = mod.build_journey(builder)
+    journey = result if isinstance(result, Journey) else builder.journey
     if a.section:
         journey._sections = [(s, st) for s, st in journey._sections if a.section in s]
         if not journey._sections:

@@ -62,9 +62,10 @@ class Journey:
         self._sections: list[tuple[str, list[Step]]] = []
 
     def register(self, section: str, steps: list[Step]) -> None:
-        if section not in SKELETON:
-            raise ValueError(f"未知骨架段 {section!r}; 合法段: {SKELETON}")
-        self._sections.append((section, steps))
+        """注册段; 段名自由(SKELETON 为参考骨架, 前缀匹配归入语义段)。"""
+        # 尝试将自定义段名归入最近的骨架段(前缀匹配)
+        matched = next((s for s in SKELETON if section.startswith(s[:2])), section)
+        self._sections.append((matched, steps))
 
     def run(self) -> JourneyResult:
         result = JourneyResult(self.name)
@@ -81,3 +82,26 @@ class Journey:
                     if st.critical:
                         result.aborted_at = f"{section}/{st.name}"
         return result
+
+
+class JourneyBuilder:
+    """包装 Client + Journey, 让 build_journey(api) 里直接 api.step(段, 标题, fn)。
+
+    兼容两种写法:
+      ① 旧: j = Journey(); j.register(...) → return j
+      ② 新: api.step("J0'", "冒烟", fn) → build_journey 无需返回值
+    """
+    def __init__(self, client, journey_name: str = "穿行"):
+        self._client = client
+        self._journey = Journey(journey_name)
+
+    def step(self, section: str, title: str, fn) -> None:
+        """注册一个步骤(兼容旧 register 的简写)。"""
+        self._journey.register(section, [Step(title, fn)])
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
+
+    @property
+    def journey(self) -> Journey:
+        return self._journey

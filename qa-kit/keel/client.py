@@ -33,6 +33,11 @@ class ApiResult:
     def ok(self) -> bool:
         return 200 <= self.status < 300
 
+    @property
+    def json(self) -> Any:
+        """requests 风格兼容: r.json['key'] / r.json.get('key') — 属性而非方法。"""
+        return self.data
+
 
 AuthFn = Callable[["Client"], str]  # 返回 Bearer token
 
@@ -67,7 +72,11 @@ class Client:
 
     # ---- 认证 ----
     def as_role(self, role: str) -> "Client":
-        """切换角色(取/缓存 token); 未配 envAuth 显式报 ENV_AUTH_MISSING(E3)。"""
+        """返回绑定该角色的独立客户端副本(不污染原实例)。
+
+        关键: 返回 copy 而非 self, 使 R02=api.as_role('k1'); R05=api.as_role('k2')
+        各自持有独立 token, 后续调用互不干扰。原实例自身也切换到该角色。
+        """
         if self._auth is None:
             from .auth import AuthError
             raise AuthError("ENV_AUTH_MISSING",
@@ -76,9 +85,15 @@ class Client:
                 " 可选类型: demo-login / credentials / static-token / custom — 详见 keel guide 常见坑。")
         if role not in self._tokens:
             self._tokens[role] = self._auth(self, role)  # type: ignore[misc]
+        # 原实例切换
         self._current_token = self._tokens[role]
         self._last_role = role
-        return self
+        # 返回独立副本(共享 token 缓存, 独立 current_token)
+        import copy
+        c = copy.copy(self)
+        c._current_token = self._tokens[role]
+        c._last_role = role
+        return c
 
     def with_token(self, token: str) -> "Client":
         self._current_token = token
@@ -87,7 +102,10 @@ class Client:
     # ---- 请求 ----
     def request(self, method: str, path: str, body: Any = None,
                 params: dict[str, Any] | None = None,
-                expect: tuple[int, ...] = (200,)) -> ApiResult:
+                expect: tuple[int, ...] = (200,), **kwargs) -> ApiResult:
+        """兼容 requests 风格: json= 等价于 body=。"""
+        if "json" in kwargs:
+            body = kwargs.pop("json")
         if params:
             from urllib.parse import urlencode
             path = f"{path}{'&' if '?' in path else '?'}{urlencode(params)}"

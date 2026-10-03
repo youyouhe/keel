@@ -85,12 +85,14 @@ def _credentials_factory(cfg: dict) -> AuthFn:
     role_field = cfg.get("roleField", "")  # 登录响应中角色字段路径
     roles_check = cfg.get("roles", {})     # {key: 期望角色}
 
+    username_field = cfg.get("usernameField", "username")  # 可配 phone/email 等
+
     def _auth(client: Client, key: str) -> str:
         acct = accounts.get(key)
         if not acct:
             raise AuthError("ACCOUNT_NOT_FOUND", f"envAuth.accounts 中无 {key!r}")
         pwd = _resolve_env_placeholders(acct["password"])
-        body = json.dumps({"username": acct["username"], "password": pwd}).encode()
+        body = json.dumps({username_field: acct["username"], "password": pwd}).encode()
         req = urllib.request.Request(client.base_url + path, data=body,
                                      headers={"Content-Type": "application/json"})
         resp = json.load(urllib.request.urlopen(req))
