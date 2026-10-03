@@ -16,10 +16,47 @@ J6 商机 / J7 订单 / J8 回款 留待 Phase 2(S03/S07/S08)落地后注册。
 断言零硬编码 id:全部先建后查、以响应返回值驱动;USCI 按秒生成,旅程可重复执行。
 角色事实:演示账号 13800000001~06 / demo123(seed.ts);登录 POST /api/v1/auth/login {phone,password};
 token 12h(lib/auth.ts TOKEN_TTL),roleField=user.roleCode。
+
+2026-10-04 适配(Keel 实跑 j_3677cd4e 反馈):
+  1) Keel 客户端对 4xx 抛 ApiError(返回式断言拿不到响应、直接中止穿行)——
+     所有预期非 2xx 的调用改走 try_call() 归一化助手(2xx 正常路径不变);
+  2) 实跑 POST /leads 报 200,而 curl/vitest 均为 201——疑似 Keel 客户端把 201 归一为 200。
+     全部 6 处 201 断言保持严格、不放松,让它继续红,等 Keel 修客户端后自动转绿(evidence 已注明)。
 """
 
 import re
 import time
+
+
+def try_call(fn):
+    """容错调用:预期非 2xx 的请求专用。Keel 客户端 4xx 抛 ApiError,这里归一化为
+    {'status': int, 'json': dict} 形状,断言语义不变、穿行不中止。
+
+    防御式取值(客户端异常对象的属性名不确定,三路兜底):
+      status: 优先 e.status(int);否则从 str(e) 行首正则 ^(\d{3})\s+(\w+) 提取;再不行置 0
+              (0 不等于任何预期码,断言照常红且不中止,证据里留原始文本)。
+      json:   优先 e.json(dict);否则包成 {"error": {"code": <机器码|''>, "message": <e.message|str(e)>}}
+              —— 现有断言只读 json['error']['code'] 与 json['error']['message'] 两个形状。
+    """
+    try:
+        return fn()
+    except Exception as e:  # 刻意宽捕获:任何客户端异常都归一化,不让穿行中止
+        text = str(e)
+        status = getattr(e, 'status', None)
+        if not isinstance(status, int):
+            m = re.match(r'^(\d{3})\s+(\w+)', text)
+            status = int(m.group(1)) if m else 0
+        code = getattr(e, 'code', None)
+        if not isinstance(code, str):
+            m2 = re.match(r'^\d{3}\s+(\w+)', text)
+            code = m2.group(1) if m2 else ''
+        message = getattr(e, 'message', None)
+        if not isinstance(message, str):
+            message = text
+        body = getattr(e, 'json', None)
+        if not isinstance(body, dict):
+            body = {'error': {'code': code, 'message': message}}
+        return {'status': status, 'json': body}
 
 
 def build_journey(api):
@@ -44,7 +81,9 @@ def build_journey(api):
             'leadType': '自拓线索', 'companyName': 'KEEL穿行公司', 'usci': st['usci'],
             'contactName': '穿行联系人', 'contactPhone': '13858000001',
         })
-        run.check('J1-建档201', r.status == 201, f'POST /api/v1/leads → {r.status}')
+        run.check('J1-建档201', r.status == 201,
+                  f'POST /api/v1/leads → {r.status};服务端 curl/vitest 均为 201,'
+                  '若实测 200 疑似 Keel 客户端把 201 归一为 200——保持严格 201,待客户端修复后转绿')
         lead = r.json['item']
         st['lead_id'] = lead['id']
 
@@ -56,18 +95,19 @@ def build_journey(api):
         run.check('J1-归属本人', item['ownerId'] == li['id'] and item['isPublic'] is False,
                   f"ownerId={item['ownerId']}, li={li['id']}, isPublic={item['isPublic']}")
 
-        # 契约锚点 INV-LEAD-003:同 USCI 全局唯一(换人再建也被拒)
-        dup = R01b.post('/api/v1/leads', json={
+        # 契约锚点 INV-LEAD-003:同 USCI 全局唯一(换人再建也被拒;4xx 会抛,走 try_call)
+        dup = try_call(lambda: R01b.post('/api/v1/leads', json={
             'leadType': '自拓线索', 'companyName': '重复USCI公司', 'usci': st['usci'],
-        })
+        }))
         run.check('J1-usci重复409含既有编号',
-                  dup.status == 409 and lead['leadNo'] in str(dup.json.get('error', {}).get('message', '')),
-                  f"dup → {dup.status}, message={dup.json.get('error', {}).get('message')}")
+                  dup['status'] == 409 and lead['leadNo'] in str(dup['json'].get('error', {}).get('message', '')),
+                  f"dup → {dup['status']}, message={dup['json'].get('error', {}).get('message')}")
 
     # ---------- J2 公海认领(双认领一拒) ----------
     def j2(run):
         r = R01a.post(f"/api/v1/leads/{st['lead_id']}/return")
-        run.check('J2-回退单201', r.status == 201, f"return → {r.status}, no={r.json.get('returnNo')}")
+        run.check('J2-回退单201', r.status == 201,
+                  f"return → {r.status}, no={r.json.get('returnNo')};若实测 200 疑似 Keel 客户端 201→200,保持严格")
         d = R02.post(f"/api/v1/leads/returns/{r.json['id']}/decide", json={'approve': True})
         run.check('J2-回退审批通过', d.json.get('status') == '已通过', f"decide → {d.json.get('status')}")
 
@@ -76,12 +116,12 @@ def build_journey(api):
                   f"pool total={pool.json['total']}")
 
         c1 = R01b.post(f"/api/v1/leads/{st['lead_id']}/claim")
-        c2 = R01c.post(f"/api/v1/leads/{st['lead_id']}/claim")
+        c2 = try_call(lambda: R01c.post(f"/api/v1/leads/{st['lead_id']}/claim"))
         run.check('J2-认领互斥一成一拒',
                   c1.status == 200 and bool(re.match(r'^RL\d{6}-\d{4}$', c1.json['claimNo']))
-                  and c2.status == 409 and c2.json['error']['code'] == 'CLAIM_RACE_LOST',
-                  f"claim#1 → {c1.status} no={c1.json.get('claimNo')}; claim#2 → {c2.status} "
-                  f"code={c2.json.get('error', {}).get('code')}")
+                  and c2['status'] == 409 and c2['json']['error']['code'] == 'CLAIM_RACE_LOST',
+                  f"claim#1 → {c1.status} no={c1.json.get('claimNo')}; claim#2 → {c2['status']} "
+                  f"code={c2['json'].get('error', {}).get('code')}")
 
         pool2 = R01b.get('/api/v1/leads/pool')
         run.check('J2-移出公海', all(i['id'] != st['lead_id'] for i in pool2.json['items']),
@@ -92,7 +132,8 @@ def build_journey(api):
         c = R01b.post('/api/v1/contacts', json={
             'contactType': '线索', 'name': '穿行联系人甲', 'phone': '13858000002', 'leadId': st['lead_id'],
         })
-        run.check('J3-挂载建档201', c.status == 201, f'POST /api/v1/contacts → {c.status}')
+        run.check('J3-挂载建档201', c.status == 201,
+                  f'POST /api/v1/contacts → {c.status};若实测 200 疑似 Keel 客户端 201→200,保持严格')
         st['contact_id'] = c.json['item']['id']
 
         lst = R01b.get(f"/api/v1/contacts?leadId={st['lead_id']}")
@@ -100,10 +141,10 @@ def build_journey(api):
         run.check('J3-列表脱敏138****0002', lst.json['total'] == 1 and masked == '138****0002',
                   f"total={lst.json['total']}, phone={masked}")
 
-        dup = R01b.post('/api/v1/contacts', json={
+        dup = try_call(lambda: R01b.post('/api/v1/contacts', json={
             'contactType': '线索', 'name': '穿行联系人甲', 'phone': '13958000002', 'leadId': st['lead_id'],
-        })
-        run.check('J3-同对象同名409', dup.status == 409, f'dup → {dup.status}')
+        }))
+        run.check('J3-同对象同名409', dup['status'] == 409, f"dup → {dup['status']}")
 
     # ---------- J4 转化(单向)+ 状态机关键边 ----------
     def j4(run):
@@ -113,23 +154,25 @@ def build_journey(api):
         # lead2:待开发线索禁转化 + 无效激活权限边(契约 INV-CONV-009 / INV-LEAD-002)
         l2 = R01a.post('/api/v1/leads', json={'leadType': '自拓线索', 'companyName': 'KEEL状态机公司'})
         st['lead2_id'] = l2.json['item']['id']
-        pre = R01a.post('/api/v1/customers', json={'leadId': st['lead2_id']})
-        run.check('J4-待开发线索禁转化400', pre.status == 400, f'convert(待开发) → {pre.status}')
+        pre = try_call(lambda: R01a.post('/api/v1/customers', json={'leadId': st['lead2_id']}))
+        run.check('J4-待开发线索禁转化400', pre['status'] == 400, f'convert(待开发) → {pre["status"]}')
 
         inv2 = R01a.post(f"/api/v1/leads/{st['lead2_id']}/status",
                          json={'toStatus': '无效线索', 'reason': '穿行验证激活权限用'})
         run.check('J4-转无效原因合规200', inv2.status == 200, f'→ {inv2.status}')
-        act1 = R01a.post(f"/api/v1/leads/{st['lead2_id']}/status", json={'toStatus': '待开发线索'})
+        act1 = try_call(lambda: R01a.post(f"/api/v1/leads/{st['lead2_id']}/status", json={'toStatus': '待开发线索'}))
         act2 = R02.post(f"/api/v1/leads/{st['lead2_id']}/status", json={'toStatus': '待开发线索'})
         run.check('J4-无效激活仅主管(403/200)',
-                  act1.status == 403 and act2.status == 200,
-                  f'R01 → {act1.status}, R02 → {act2.status}')
-        back = R01a.post(f"/api/v1/leads/{st['lead2_id']}/status", json={'toStatus': '待开发线索'})
-        run.check('J4-同状态迁移400', back.status == 400, f'→ {back.status}')
+                  act1['status'] == 403 and act2.status == 200,
+                  f'R01 → {act1["status"]}, R02 → {act2.status}')
+        back = try_call(lambda: R01a.post(f"/api/v1/leads/{st['lead2_id']}/status", json={'toStatus': '待开发线索'}))
+        run.check('J4-同状态迁移400', back['status'] == 400, f'→ {back["status"]}')
 
         # 主链转化(lead1,现归王)
         v = R01b.post('/api/v1/customers', json={'leadId': st['lead_id']})
-        run.check('J4-转化201', v.status == 201, f"POST /api/v1/customers → {v.status}, no={v.json['item'].get('customerNo')}")
+        run.check('J4-转化201', v.status == 201,
+                  f"POST /api/v1/customers → {v.status}, no={v.json['item'].get('customerNo')};"
+                  '若实测 200 疑似 Keel 客户端 201→200,保持严格')
         cust = v.json['item']
         st['customer_id'] = cust['id']
 
@@ -140,20 +183,20 @@ def build_journey(api):
                   f"companyName={cust['companyName']}, status={cust['customerStatus']}, "
                   f"contacts={len(cd.json['contacts'])}")
 
-        again = R01b.post('/api/v1/customers', json={'leadId': st['lead_id']})
+        again = try_call(lambda: R01b.post('/api/v1/customers', json={'leadId': st['lead_id']}))
         run.check('J4-禁再转化409(LEAD_ALREADY_CONVERTED)',
-                  again.status == 409 and again.json['error']['code'] == 'LEAD_ALREADY_CONVERTED',
-                  f'again → {again.status}, code={again.json.get("error", {}).get("code")}')
+                  again['status'] == 409 and again['json']['error']['code'] == 'LEAD_ALREADY_CONVERTED',
+                  f'again → {again["status"]}, code={again["json"].get("error", {}).get("code")}')
 
         d = R01b.get(f"/api/v1/leads/{st['lead_id']}")
         run.check('J4-线索回写客户', d.json['item'].get('customerId') == cust['id'],
                   f"customerId={d.json['item'].get('customerId')} vs {cust['id']}")
 
-        blocked = R01b.post(f"/api/v1/leads/{st['lead_id']}/status",
-                            json={'toStatus': '无效线索', 'reason': '穿行验证下游保护用'})
-        run.check('J4-下游保护400', blocked.status == 400, f'置无效 → {blocked.status}')
-        rev = R01b.post(f"/api/v1/leads/{st['lead_id']}/status", json={'toStatus': '待开发线索'})
-        run.check('J4-商机不可回退待开发400', rev.status == 400, f'→ {rev.status}')
+        blocked = try_call(lambda: R01b.post(f"/api/v1/leads/{st['lead_id']}/status",
+                                             json={'toStatus': '无效线索', 'reason': '穿行验证下游保护用'}))
+        run.check('J4-下游保护400', blocked['status'] == 400, f'置无效 → {blocked["status"]}')
+        rev = try_call(lambda: R01b.post(f"/api/v1/leads/{st['lead_id']}/status", json={'toStatus': '待开发线索'}))
+        run.check('J4-商机不可回退待开发400', rev['status'] == 400, f'→ {rev["status"]}')
 
     # ---------- J5 归属流转(变更留痕) ----------
     def j5(run):
@@ -163,12 +206,13 @@ def build_journey(api):
         t = R01b.post(f"/api/v1/customers/{st['customer_id']}/transfer",
                       json={'toOwnerId': st['zhao_id'], 'reason': 'KEEL穿行转交'})
         run.check('J5-转交单201', t.status == 201 and bool(re.match(r'^ZJ\d{6}-\d{4}$', t.json['transferNo'])),
-                  f"transfer → {t.status}, no={t.json.get('transferNo')}")
+                  f"transfer → {t.status}, no={t.json.get('transferNo')};若实测 200 疑似 Keel 客户端 201→200,保持严格")
         d1 = R02.post(f"/api/v1/customers/transfers/{t.json['id']}/decide", json={'approve': True})
         run.check('J5-转交审批通过', d1.json.get('status') == '已通过', f"decide → {d1.json.get('status')}")
 
         rr = R01c.post(f"/api/v1/customers/{st['customer_id']}/return")
-        run.check('J5-回退单201', rr.status == 201, f"return → {rr.status}, no={rr.json.get('returnNo')}")
+        run.check('J5-回退单201', rr.status == 201,
+                  f"return → {rr.status}, no={rr.json.get('returnNo')};若实测 200 疑似 Keel 客户端 201→200,保持严格")
         d2 = R02.post(f"/api/v1/customers/returns/{rr.json['id']}/decide", json={'approve': True})
         run.check('J5-回退审批通过', d2.json.get('status') == '已通过', f"decide → {d2.json.get('status')}")
 
@@ -191,17 +235,17 @@ def build_journey(api):
 
     # ---------- J9 越权回归(97ac7e5) ----------
     def j9(run):
-        # 李全程未持有该客户(现归王)→ 详情 403
-        x = R01a.get(f"/api/v1/customers/{st['customer_id']}")
-        run.check('J9-越权读客户403(97ac7e5回归)', x.status == 403,
-                  f"R01a GET /api/v1/customers/{st['customer_id']} → {x.status}")
+        # 李全程未持有该客户(现归王)→ 详情 403;4xx 会抛,走 try_call
+        x = try_call(lambda: R01a.get(f"/api/v1/customers/{st['customer_id']}"))
+        run.check('J9-越权读客户403(97ac7e5回归)', x['status'] == 403,
+                  f"R01a GET /api/v1/customers/{st['customer_id']} → {x['status']}")
         m = R02.get(f"/api/v1/customers/{st['customer_id']}")
         run.check('J9-主管可读200', m.status == 200, f'R02 → {m.status}')
 
         # 线索归王:李读其联系人 → 403
-        cx = R01a.get(f"/api/v1/contacts/{st['contact_id']}")
-        run.check('J9-越权读联系人403', cx.status == 403,
-                  f"R01a GET /api/v1/contacts/{st['contact_id']} → {cx.status}")
+        cx = try_call(lambda: R01a.get(f"/api/v1/contacts/{st['contact_id']}"))
+        run.check('J9-越权读联系人403', cx['status'] == 403,
+                  f"R01a GET /api/v1/contacts/{st['contact_id']} → {cx['status']}")
 
         # 列表行级隔离:李的客户列表不含王的客户
         lst = R01a.get('/api/v1/customers')

@@ -90,9 +90,10 @@ class TestClient(unittest.TestCase):
         self.assertTrue(r.ok); self.assertEqual(r.data[0]["id"], 1)
 
     def test_error_semantics(self):
-        with self.assertRaises(ApiError) as ctx:
-            self.client.as_role("R02").get("/api/bad")
-        self.assertEqual((ctx.exception.status, ctx.exception.code), (400, "SCHEMA_INVALID"))
+        """P2 后: 4xx 不抛异常, 返回原始响应(status+json 可断言)。"""
+        r = self.client.as_role("R02").get("/api/bad")
+        self.assertEqual(r.status, 400)
+        self.assertEqual(r.json["code"], "SCHEMA_INVALID")
 
     def test_probe_expect_fail(self):
         c = Client(self.base).with_token("wrong")

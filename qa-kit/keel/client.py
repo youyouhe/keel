@@ -118,30 +118,26 @@ class Client:
         req = urllib.request.Request(self.base_url + path, data=data,
                                      headers=headers, method=method)
         try:
-            raw = urllib.request.urlopen(req).read().decode()
-            result = ApiResult(200, json.loads(raw) if raw.strip() else None)
+            resp = urllib.request.urlopen(req)
+            raw = resp.read().decode()
+            # P1 修复: 用传输层真实状态码(201/204 等), 不硬编码 200
+            result = ApiResult(resp.status, json.loads(raw) if raw.strip() else None)
         except urllib.error.HTTPError as e:
             try:
-                err = json.loads(e.read().decode()).get("error", {})
+                err_body = json.loads(e.read().decode())
             except Exception:
-                err = {}
+                err_body = {}
             # E1: 401 且有 auth 策略 → 清 token 缓存重试一次(自动重登)
             if e.code == 401 and self._auth and self._current_token:
                 self._tokens.clear()
                 self._current_token = None
-                # 找回最近的角色重登
-                # (不完美: 假设最后一次 as_role 的 key 可复用; 更精确需在 as_role 记 last_role)
                 if getattr(self, "_last_role", None):
                     self.as_role(self._last_role)
                     return self.request(method, path, body, params, expect)
-            result = ApiResult(e.code)
-            # 语义化异常仅在状态不在 expect 时抛出
-            if e.code not in expect:
-                raise ApiError(e.code, err.get("code"), err.get("message")) from None
-            result.data = err
-        if result.status not in expect and result.ok:
-            raise ApiError(result.status, "UNEXPECTED_STATUS",
-                           f"{method} {path} → {result.status}, expect {expect}")
+            # P2: 4xx/5xx 不抛异常 — 返回原始响应对象(r.status/r.json 可断言)
+            # 测试框架客户端是观察者, 判定权归 run.check
+            err = err_body.get("error", err_body)
+            result = ApiResult(e.code, err)
         return result
 
     def get(self, path: str, **kw) -> ApiResult:
@@ -158,7 +154,7 @@ class Client:
 
     def try_(self, method: str, path: str, **kw) -> ApiError | None:
         """探针: 期望失败。非 2xx → 返回 ApiError(三层语义); 2xx → None(断言方判越权)。"""
-        r = self.request(method, path, expect=tuple(range(200, 600)), **kw)
+        r = self.request(method, path, **kw)
         if r.ok:
             return None
         err = r.data if isinstance(r.data, dict) else {}

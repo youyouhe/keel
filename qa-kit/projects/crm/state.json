@@ -1,13 +1,13 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-04 00:32:31",
+  "time": "2026-10-04 00:45:47",
   "journey": "crm 穿行",
   "ok": false,
-  "passed": 4,
-  "total": 6,
-  "abortedAt": "J1 主数据建账守卫/录入线索",
-  "report": "projects\\crm\\reports\\report-20261004-003231.json"
+  "passed": 31,
+  "total": 37,
+  "abortedAt": null,
+  "report": "projects\\crm\\reports\\report-20261004-004547.json"
  },
  "contractVersion": 0,
  "runs": [
@@ -52,6 +52,18 @@
    "ok": false,
    "passed": 4,
    "total": 6
+  },
+  {
+   "time": "2026-10-04 00:35:34",
+   "ok": false,
+   "passed": 4,
+   "total": 6
+  },
+  {
+   "time": "2026-10-04 00:45:47",
+   "ok": false,
+   "passed": 31,
+   "total": 37
   }
  ]
 }
