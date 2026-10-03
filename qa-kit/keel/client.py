@@ -1,6 +1,6 @@
 """keel.client — 认证与请求封装（角色矩阵 + 错误码语义）
 
-提炼自起源项目 8 天实测: 每轮测试的 login()/req() 模式。
+提炼自起源项目的长期回归实践: 每轮 login()/req() 模式。
 错误码三层语义: HTTP status × error.code × error.message。
 """
 from __future__ import annotations
