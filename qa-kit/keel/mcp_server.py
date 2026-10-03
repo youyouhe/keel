@@ -22,8 +22,13 @@ from .cli import main as cli_main
 
 TOOLS = [
     {
+        "name": "keel_guide",
+        "description": "【首次使用请先调用】Keel 整体使用指南: 是什么/五步工作流/契约与旅程写法/常见坑。可选 section: 工作流|契约|旅程|坑|分层",
+        "inputSchema": {"type": "object", "properties": {
+            "section": {"type": "string", "description": "章节名, 缺省返回全文"}}, "required": []},
+    }, {
         "name": "keel_project_create",
-        "description": "创建 Keel 项目空间(环境登记+契约/旅程模板+状态事实源)",
+        "description": "(先调 keel_guide 看工作流) 创建 Keel 项目空间(环境登记+契约/旅程模板+状态事实源)",
         "inputSchema": {"type": "object", "properties": {
             "project": {"type": "string", "description": "项目名, 如 crm"},
             "env_dev": {"type": "string", "description": "dev 环境基地址"},
@@ -36,7 +41,7 @@ TOOLS = [
             "project": {"type": "string"}}, "required": ["project"]},
     }, {
         "name": "keel_journey_run",
-        "description": "执行旅程回归(全量或按骨架段), 自动落报告并更新状态; 返回摘要",
+        "description": "(先调 keel_guide 看工作流) 执行旅程回归(全量或按骨架段), 自动落报告并更新状态; 返回摘要",
         "inputSchema": {"type": "object", "properties": {
             "project": {"type": "string"},
             "section": {"type": "string", "description": "骨架段过滤, 如 J3; 缺省全量"},
@@ -118,6 +123,10 @@ def _inside(path: str, root: str) -> bool:
 
 def call_tool(name: str, args: dict, root: str = "projects") -> dict:
     """执行工具: 复用 CLI 核心, 捕获输出与退出码; 含 MCP 层防线。"""
+    if name == "keel_guide":
+        from .guide import get_guide
+        out = get_guide(str(args.get("section", "")))
+        return {"ok": True, "exitCode": 0, "output": out}
     if name not in _ARGV:
         return {"ok": False, "error": f"unknown tool {name}"}
     # 防线①: context_path 必须落在 root 内且为 .json

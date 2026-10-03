@@ -1,0 +1,15 @@
+[
+ {
+  "id": "INV-EXAMPLE-1",
+  "rule": "示例: 列表接口返回 200",
+  "check": {
+   "left": {
+    "path": "status"
+   },
+   "op": "==",
+   "right": 200
+  },
+  "version": 1,
+  "status": "draft"
+ }
+]

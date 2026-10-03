@@ -47,6 +47,11 @@ def _env_api(meta: dict, which: str = "dev"):
     return Client(url)
 
 
+def cmd_guide(a):
+    from .guide import get_guide
+    print(get_guide(getattr(a, "section", "") or ""))
+
+
 def cmd_new(a):
     from .project import KeelProject
     try:
@@ -173,6 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     pr = argparse.ArgumentParser("keel")
     pr.add_argument("--root", default=DEFAULT_ROOT, help="项目根目录(默认 projects/)")
     sub = pr.add_subparsers(dest="cmd", required=True)
+
+    s = sub.add_parser("guide");           s.add_argument("section", nargs="?", default="")
+    s.set_defaults(fn=cmd_guide)
 
     s = sub.add_parser("new");            s.add_argument("project")
     s.add_argument("--env-dev", default=""); s.add_argument("--issue-repo", default="")

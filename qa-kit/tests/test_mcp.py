@@ -7,7 +7,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from keel.channels.mcp import McpClient
-from keel.mcp_server import _Handler, call_tool
+from keel.mcp_server import _Handler, TOOLS, call_tool
 
 MINI_JOURNEY = '''
 from keel import Journey, Step
@@ -61,7 +61,7 @@ class TestMcpServer(unittest.TestCase):
         for expect in ("keel_project_create", "keel_status_get", "keel_journey_run",
                        "keel_contract_verify", "keel_report_render", "keel_issue_sync"):
             self.assertIn(expect, names)
-        self.assertEqual(len(names), 6)
+        self.assertEqual(len(names), 7)  # guide + 六生命周期
 
     def test_02_create_and_run_over_mcp(self):
         r = self.client.call("keel_project_create",
@@ -123,3 +123,17 @@ class TestMcpDefenses(unittest.TestCase):
     def test_body_limit_constant(self):
         from keel.mcp_server import MAX_BODY
         self.assertEqual(MAX_BODY, 1024 * 1024)
+
+
+class TestGuide(unittest.TestCase):
+    def test_guide_tool_via_mcp(self):
+        r = call_tool("keel_guide", {})
+        self.assertTrue(r["ok"])
+        self.assertIn("五步工作流", r["output"])
+        r = call_tool("keel_guide", {"section": "常见坑"})
+        self.assertIn("journeys.py 模板", r["output"])
+
+    def test_tools_list_includes_guide_first(self):
+        names = [t["name"] for t in TOOLS]
+        self.assertEqual(names[0], "keel_guide")
+        self.assertIn("先调 keel_guide", [t["description"] for t in TOOLS if t["name"] == "keel_project_create"][0])

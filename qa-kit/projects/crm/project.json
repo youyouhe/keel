@@ -1,0 +1,9 @@
+{
+ "name": "crm",
+ "createdAt": "2026-10-03 16:58",
+ "env": {
+  "dev": "http://192.168.8.181:8802",
+  "test": ""
+ },
+ "issueRepo": "wangjiansudi-hash/crm-suite"
+}
