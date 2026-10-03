@@ -12,7 +12,10 @@ import contextlib
 import io
 import json
 import os
+import re
 import sys
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .cli import main as cli_main
@@ -83,18 +86,59 @@ _ARGV = {
 }
 
 
+MAX_BODY = 1 * 1024 * 1024          # 1MB
+MAX_CONCURRENCY = 8
+_gate = threading.Semaphore(MAX_CONCURRENCY)
+
+
+def audit(tool: str, args: dict, ok: bool, root: str) -> None:
+    """审计日志: logs/mcp-audit.jsonl(工具级取证)。"""
+    try:
+        log_dir = os.path.join(root, "..", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        safe = {k: (v if not isinstance(v, str) or len(v) < 200 else v[:200] + "...")
+                for k, v in args.items()}
+        with open(os.path.join(log_dir, "mcp-audit.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                                "tool": tool, "args": safe, "ok": ok},
+                               ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def _inside(path: str, root: str) -> bool:
+    """路径必须解析后落在 root 内(防远程任意读写)。"""
+    try:
+        rp = os.path.realpath(os.path.abspath(path))
+        rr = os.path.realpath(os.path.abspath(root))
+        return rp == rr or rp.startswith(rr + os.sep)
+    except Exception:
+        return False
+
+
 def call_tool(name: str, args: dict, root: str = "projects") -> dict:
-    """执行工具: 复用 CLI 核心, 捕获输出与退出码。"""
+    """执行工具: 复用 CLI 核心, 捕获输出与退出码; 含 MCP 层防线。"""
     if name not in _ARGV:
         return {"ok": False, "error": f"unknown tool {name}"}
+    # 防线①: context_path 必须落在 root 内且为 .json
+    if "context_path" in args and not (
+            str(args["context_path"]).endswith(".json")
+            and _inside(os.path.join(root, str(args["context_path"])), root)):
+        return {"ok": False, "error": "context_path 仅允许 root 内的 .json 文件"}
+    # 防线②: issue 仓只允许项目登记值(忽略调用方传入 repo, 防 gh 凭据越权)
+    if name == "keel_issue_sync":
+        args = {k: v for k, v in args.items() if k != "repo"}
     buf = io.StringIO()
     code = 0
-    try:
-        with contextlib.redirect_stdout(buf):
-            cli_main(["--root", root, *_ARGV[name](args)])
-    except SystemExit as e:
-        code = e.code or 0
-    return {"ok": code == 0, "exitCode": code, "output": buf.getvalue().strip()}
+    with _gate:
+        try:
+            with contextlib.redirect_stdout(buf):
+                cli_main(["--root", root, *_ARGV[name](args)])
+        except SystemExit as e:
+            code = e.code or 0
+    out = {"ok": code == 0, "exitCode": code, "output": buf.getvalue().strip()}
+    audit(name, args, out["ok"], root)
+    return out
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -124,7 +168,12 @@ class _Handler(BaseHTTPRequestHandler):
                 self._json(403, {"error": {"code": "FORBIDDEN", "message": "无效 token"}})
                 return
         try:
-            req = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            length = int(self.headers.get("Content-Length", 0))
+            if length > MAX_BODY:
+                self._json(413, {"error": {"code": "TOO_LARGE",
+                                           "message": f"body 超 {MAX_BODY} 字节上限"}})
+                return
+            req = json.loads(self.rfile.read(length))
         except Exception:
             self._json(400, {"error": {"code": "PARSE_ERROR", "message": "body 非合法 JSON"}})
             return
@@ -159,12 +208,14 @@ class _Handler(BaseHTTPRequestHandler):
             self._json(200, resp)
 
 
-def serve(port: int = 8902, token: str | None = None, root: str = "projects") -> None:
+def serve(host: str = "127.0.0.1", port: int = 8902, token: str | None = None,
+          root: str = "projects") -> None:
     _Handler.token = token or os.environ.get("KEEL_MCP_TOKEN")
     _Handler.root = root
-    srv = ThreadingHTTPServer(("127.0.0.1", port), _Handler)
-    print(f"keel-mcp serving on http://127.0.0.1:{port}/mcp (root={root},"
-          f" auth={'bearer' if _Handler.token else 'open-local'})")
+    srv = ThreadingHTTPServer((host, port), _Handler)
+    scope = "本机回环" if host in ("127.0.0.1", "localhost") else f"⚠ 局域网 {host}(明文HTTP,务必内网使用)"
+    print(f"keel-mcp serving on http://{host}:{port}/mcp (root={root}, {scope},"
+          f" auth={'bearer' if _Handler.token else '⚠ open(建议 --token)'})")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
@@ -173,11 +224,13 @@ def serve(port: int = 8902, token: str | None = None, root: str = "projects") ->
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser("keel mcp-server")
-    p.add_argument("--port", type=int, default=8902)
-    p.add_argument("--token", default="")
-    p.add_argument("--root", default="projects")
+    p.add_argument("--host", default=os.environ.get("KEEL_HOST", "127.0.0.1"),
+                   help="绑定地址; 局域网部署用 0.0.0.0 或具体内网 IP")
+    p.add_argument("--port", type=int, default=int(os.environ.get("KEEL_PORT", "8902")))
+    p.add_argument("--token", default=os.environ.get("KEEL_MCP_TOKEN", ""))
+    p.add_argument("--root", default=os.environ.get("KEEL_ROOT", "projects"))
     a = p.parse_args(argv)
-    serve(a.port, a.token or None, a.root)
+    serve(a.host, a.port, a.token or None, a.root)
     return 0
 
 

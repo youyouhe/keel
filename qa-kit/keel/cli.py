@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -25,6 +26,8 @@ DEFAULT_ROOT = "projects"
 
 def _proj(args) -> "object":
     from .project import KeelProject
+    if not KeelProject.valid_name(args.project):
+        sys.exit(f"非法项目名: {args.project!r}")
     p = Path(args.root) / args.project
     if not p.exists():
         sys.exit(f"项目不存在: {p} (先 keel new {args.project})")
@@ -41,7 +44,10 @@ def _env_api(meta: dict, which: str = "dev"):
 
 def cmd_new(a):
     from .project import KeelProject
-    p = KeelProject.create(a.root, a.project, env_dev=a.env_dev, issue_repo=a.issue_repo)
+    try:
+        p = KeelProject.create(a.root, a.project, env_dev=a.env_dev, issue_repo=a.issue_repo)
+    except (ValueError, FileExistsError) as e:
+        sys.exit(str(e))
     print(f"项目已创建: {p.root}")
     print(f"  下一步: 1) contracts/invariants.json 补契约(AI 主笔+签收)"
           f" 2) tests/journeys.py 注册旅程段 3) keel journey run {a.project}")
@@ -188,8 +194,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("render-report");  s.add_argument("input")
     s.add_argument("-o", "--output", default="report.html")
 
-    s = sub.add_parser("mcp-server");     s.add_argument("--port", type=int, default=8902)
-    s.add_argument("--token", default=""); s.add_argument("--root", default=DEFAULT_ROOT)
+    s = sub.add_parser("mcp-server")
+    s.add_argument("--host", default=os.environ.get("KEEL_HOST", "127.0.0.1"))
+    s.add_argument("--port", type=int, default=int(os.environ.get("KEEL_PORT", "8902")))
+    s.add_argument("--token", default=os.environ.get("KEEL_MCP_TOKEN", ""))
+    s.add_argument("--root", default=os.environ.get("KEEL_ROOT", DEFAULT_ROOT))
 
     a = pr.parse_args(argv)
     if not hasattr(a, "root"):
@@ -199,7 +208,8 @@ def main(argv: list[str] | None = None) -> int:
         cmd_report_render(a); return 0
     if a.cmd == "mcp-server":
         from .mcp_server import serve
-        serve(a.port, a.token or None, a.root); return 0
+        serve(a.host, a.port, a.token or None, a.root)
+        return 0
     a.fn(a)
     return 0
 

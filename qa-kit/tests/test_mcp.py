@@ -65,7 +65,8 @@ class TestMcpServer(unittest.TestCase):
 
     def test_02_create_and_run_over_mcp(self):
         r = self.client.call("keel_project_create",
-                             {"project": "M1", "env_dev": self.base})
+                             {"project": "M1", "env_dev": self.base,
+                              "issue_repo": "acme/m1"})
         self.assertTrue(r["ok"], r)
         # 注入领域旅程
         open(os.path.join(self.root, "M1", "tests", "journeys.py"), "w",
@@ -83,11 +84,42 @@ class TestMcpServer(unittest.TestCase):
         self.assertIn("unknown tool", r["error"])
 
     def test_04_issue_sync_dry_over_mcp(self):
+        # repo 传入被 MCP 层忽略(防线②), 强制用项目登记值 acme/m1
         r = self.client.call("keel_issue_sync",
-                             {"project": "M1", "repo": "acme/crm", "dry_run": True})
+                             {"project": "M1", "repo": "attacker/evil", "dry_run": True})
         self.assertTrue(r["ok"])
         self.assertIn("issue sync 完成", r["output"])
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestMcpDefenses(unittest.TestCase):
+    """MCP 层防线: 路径遍历/repo 越权/项目名清洗。"""
+
+    def test_project_name_traversal_rejected(self):
+        from keel.mcp_server import call_tool
+        import tempfile
+        root = tempfile.mkdtemp(prefix="keel_def_")
+        r = call_tool("keel_project_create", {"project": "../evil"}, root=root)
+        self.assertFalse(r["ok"])
+        r = call_tool("keel_status_get", {"project": "../../etc"}, root=root)
+        self.assertFalse(r["ok"])
+
+    def test_context_path_confined_to_root(self):
+        from keel.mcp_server import call_tool
+        import tempfile
+        root = tempfile.mkdtemp(prefix="keel_def_")
+        r = call_tool("keel_contract_verify",
+                      {"project": "x", "context_path": "../../secret.json"}, root=root)
+        self.assertIn("仅允许 root 内", r["error"])
+
+    def test_issue_sync_repo_ignored_at_mcp_layer(self):
+        """MCP 层忽略调用方 repo(强制项目登记值) → CLI 收不到 --repo 即用登记值。"""
+        src = open("keel/mcp_server.py", encoding="utf-8").read()
+        self.assertIn('args = {k: v for k, v in args.items() if k != "repo"}', src)
+
+    def test_body_limit_constant(self):
+        from keel.mcp_server import MAX_BODY
+        self.assertEqual(MAX_BODY, 1024 * 1024)

@@ -1,0 +1,2 @@
+{"time": "2026-10-03 14:43:11", "tool": "keel_project_create", "args": {"project": "smoke"}, "ok": true}
+{"time": "2026-10-03 14:43:11", "tool": "keel_status_get", "args": {"project": "smoke"}, "ok": true}

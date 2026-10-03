@@ -10,6 +10,7 @@ projects/<A>/
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -42,9 +43,17 @@ INVARIANTS_TEMPLATE = [
 class KeelProject:
     root: Path
 
+    NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+    @classmethod
+    def valid_name(cls, name: str) -> bool:
+        return bool(cls.NAME_RE.match(name))
+
     @classmethod
     def create(cls, root: str | Path, name: str, env_dev: str = "",
                issue_repo: str = "") -> "KeelProject":
+        if not cls.valid_name(name):
+            raise ValueError(f"非法项目名 {name!r}: 仅允许字母/数字/_/- 且≤64位(防路径遍历)")
         p = Path(root) / name
         if p.exists():
             raise FileExistsError(f"项目已存在: {p}")
