@@ -152,6 +152,7 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
 
 class _Handler(BaseHTTPRequestHandler):
     server_version = "keel-mcp/0.5"
+    protocol_version = "HTTP/1.1"          # keep-alive 语义(SDK 客户端需要)
     token: str | None = None
     root: str = "projects"
 
@@ -166,6 +167,13 @@ class _Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def do_GET(self):
+        """Streamable HTTP 的 GET 用于服务器推送长流; 本服务无状态, 规范性拒绝。"""
+        self.send_response(405)
+        self.send_header("Allow", "POST")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self):
         if self.path != "/mcp":
@@ -186,7 +194,6 @@ class _Handler(BaseHTTPRequestHandler):
         except Exception:
             self._json(400, {"error": {"code": "PARSE_ERROR", "message": "body 非合法 JSON"}})
             return
-        sse = "text/event-stream" in self.headers.get("Accept", "")
         method, rid = req.get("method"), req.get("id")
         if method == "initialize":
             resp = {"jsonrpc": "2.0", "id": rid, "result": {
@@ -206,15 +213,10 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             resp = {"jsonrpc": "2.0", "id": rid,
                     "error": {"code": -32601, "message": f"method not found: {method}"}}
-        if sse:
-            body = json.dumps(resp, ensure_ascii=False).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Content-Length", str(len(body) + 6))
-            self.end_headers()
-            self.wfile.write(b"data: " + body + b"\n\n")
-        else:
-            self._json(200, resp)
+        # MCP Streamable HTTP: 无状态请求-响应, 直接 application/json 定长返回。
+        # (曾按 Accept 套 SSE 单帧+Content-Length → SDK 客户端进入流读取等不到
+        #  流关闭而超时 -32001; SSE 推送长流我们不做, GET 见 405。)
+        self._json(200, resp)
 
 
 def serve(host: str = "127.0.0.1", port: int = 8902, token: str | None = None,
