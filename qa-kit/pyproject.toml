@@ -1,0 +1,16 @@
+[project]
+name = "keel-qa"
+version = "0.1.0"
+description = "Keel 龙骨 — 契约驱动的通用 B 端系统穿行测试框架(测试套件)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+fuzz = ["schemathesis>=4.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["keel*"]
