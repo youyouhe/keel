@@ -6,12 +6,14 @@ HTML 汇报模板脱胎于实测工作汇报页(统计卡/矩阵/时间线/缺�
 from __future__ import annotations
 
 import html
+import json
+from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from .primitives import Saga, TestRun
+from .primitives import CheckResult, Saga, TestRun
 
 
 class Severity(str, Enum):
@@ -60,6 +62,40 @@ class Report:
         for f in self.findings:
             by_sev[f.severity.value] = by_sev.get(f.severity.value, 0) + 1
         return {"passed": p, "total": n, "failed": n - p, **by_sev}
+
+    # ---- 序列化(frontend/CI 产物) ----
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "title": self.title, "date": self.date, "conclusion": self.conclusion,
+            "stats": self.stats(),
+            "runs": [{"name": r.name,
+                      "passed": r.passed, "total": len(r.checks),
+                      "failed": [c.name for c in r.failed],
+                      "checks": [{"name": c.name, "ok": c.ok,
+                                  "evidence": str(c.evidence)[:300]} for c in r.checks]}
+                     for r in self.runs],
+            "findings": [{"id": f.id, "severity": f.severity.value, "title": f.title,
+                          "evidence": f.evidence, "suggestion": f.suggestion}
+                         for f in self.findings],
+        }
+
+    def to_json(self, path: str) -> None:
+        Path(path).write_text(
+            json.dumps(self.to_dict(), ensure_ascii=False, indent=1), encoding="utf-8")
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "Report":
+        runs = []
+        for r in d.get("runs", []):
+            t = TestRun(r.get("name", ""))
+            for c in r.get("checks", []):
+                t.checks.append(CheckResult(c["name"], c["ok"], c.get("evidence", "")))
+            runs.append(t)
+        finds = [Finding(f["id"], Severity(f["severity"]), f["title"],
+                         f.get("evidence", ""), f.get("suggestion", ""))
+                 for f in d.get("findings", [])]
+        return cls(d.get("title", ""), d.get("date", ""),
+                   d.get("conclusion", ""), runs, finds)
 
     def render_md(self) -> str:
         s = self.stats()

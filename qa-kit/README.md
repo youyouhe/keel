@@ -52,7 +52,14 @@ print(run.summary())
 - **漂移优先**：基线不一致时告警而非默默跑错（源自回放缓存三态思想）
 - Windows GBK 终端跑 fuzz 需 `PYTHONIOENCODING=utf-8`（`run_fuzz` 已内置）
 
-## 下一步（v0.2 候选）
+## v0.2 已交付
+
+- ✅ invariants.py：契约加载(yaml/json 双轨) + dig 路径取值 + verify() 编译为勾稽断言(confirmed/draft/unsourced 状态分档)
+- ✅ journeys.py：9 段骨架(SKELETON) + Journey 执行器(critical 步骤失败即中止, 段隔离)
+- ✅ report 序列化(to_json/from_dict) + CLI(`python -m keel render-report report.json -o report.html`)
+- ✅ ../frontend/index.html：静态查看器(拖 report.json+invariants.json 即渲染, 零构建, Playwright 冒烟通过)
+
+## 下一步（v0.3 候选）
 
 - [ ] invariants.yaml 加载器 + 编译为勾稽断言（contracts/ 规范落地）
 - [ ] journeys 执行器（9 段骨架实例化）

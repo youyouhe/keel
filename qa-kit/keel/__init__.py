@@ -8,6 +8,8 @@ __version__ = "0.1.0"
 from .client import ApiError, ApiResult, Client, RoleMatrix, demo_login
 from .primitives import CheckResult, Saga, TestRun
 from .baseline import Baseline, Drift, guarded
+from .invariants import Invariant, InvariantSet
+from .journeys import Journey, JourneyResult, Step, SKELETON
 from .report import Finding, Report, Severity
 from .schemathesis import FuzzSummary, build_mini_spec, run_fuzz
 
@@ -17,4 +19,5 @@ __all__ = [
     "Baseline", "Drift", "guarded",
     "Finding", "Report", "Severity",
     "FuzzSummary", "build_mini_spec", "run_fuzz",
+    "Invariant", "InvariantSet", "Journey", "JourneyResult", "Step", "SKELETON",
 ]

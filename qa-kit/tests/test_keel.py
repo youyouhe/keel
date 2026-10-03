@@ -1,5 +1,7 @@
 """Keel qa-kit 自测: 纯逻辑 + 本地 loopback mock(无外网依赖)。"""
 import json
+import os
+import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -117,3 +119,64 @@ class TestSchemathesis(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestInvariants(unittest.TestCase):
+    def test_json_contract_and_eval(self):
+        import tempfile, os
+        from keel import InvariantSet
+        contract = [{"id": "INV-1", "rule": "试算平衡", "version": 1, "status": "confirmed",
+                     "check": {"left": {"path": "tb.check.initialDiff"}, "op": "==", "right": 0}}]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(contract, f); p = f.name
+        try:
+            s = InvariantSet.load(p)
+            ctx = {"tb": {"check": {"initialDiff": 0, "closingDiff": 3}}}
+            run = s.verify(ctx)
+            self.assertEqual(run.passed, 1)            # 只评 confirmed
+            run_all = s.verify(ctx, only="all")
+            self.assertEqual(len(run_all.checks), 1)
+        finally:
+            os.unlink(p)
+
+    def test_dig(self):
+        from keel.invariants import dig
+        self.assertEqual(dig({"a": [{"b": 7}]}, "a[0].b"), 7)
+        self.assertIsNone(dig({"a": 1}, "a.b.c"))
+
+
+class TestJourneys(unittest.TestCase):
+    def test_skeleton_run_and_abort(self):
+        from keel.journeys import Journey, Step, SKELETON
+        j = Journey("样例")
+        def good(run): run.check("通过项", True)
+        def boom(run): run.check("炸了", False); raise RuntimeError("段故障")
+        def after(run): run.check("不应到达", True)
+        j.register(SKELETON[0], [Step("正常", good)])
+        j.register(SKELETON[1], [Step("临界", boom), Step("后续", after, critical=False)])
+        j.register(SKELETON[2], [Step("被跳过", after)])
+        r = j.run()
+        self.assertIsNotNone(r.aborted_at)
+        self.assertIn("J1", r.aborted_at)
+        self.assertFalse(r.ok)
+        self.assertTrue(r.summary().startswith("[样例] 中止@"))
+
+
+class TestReportIo(unittest.TestCase):
+    def test_json_roundtrip_and_cli(self):
+        from keel import Report, Severity, Finding, TestRun
+        run = TestRun("J0"); run.check("越权 403", True, "ev")
+        rep = Report("回归", conclusion="绿", runs=[run],
+                     findings=[Finding("O-1", Severity.OBS, "t", "e", "s")])
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(rep.to_dict(), f); p = f.name
+        try:
+            rep2 = Report.from_dict(json.load(open(p, encoding="utf-8")))
+            self.assertEqual(rep2.stats()["total"], 1)
+            self.assertEqual(rep2.findings[0].id, "O-1")
+            out = p.replace(".json", ".html")
+            from keel.cli import main
+            self.assertEqual(main(["render-report", p, "-o", out]), 0)
+            self.assertIn("<!DOCTYPE html>", open(out, encoding="utf-8").read())
+        finally:
+            os.unlink(p)

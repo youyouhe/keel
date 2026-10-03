@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keel · 契约与报告查看器</title>
+<style>
+:root{--ink:#1a2332;--ink2:#4a5568;--line:#e2e8f0;--brand:#2b5fd9;--soft:#eef3fd;
+--ok:#0e9f6e;--oks:#e6f7f0;--warn:#dd9418;--ws:#fdf5e3;--bad:#d03c3c;--bs:#fdeaea;--info:#7048c8;--is:#f2ecfb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,'Microsoft YaHei',sans-serif;color:var(--ink);background:#f7f8fa;line-height:1.6}
+header{background:linear-gradient(135deg,#1d3a7a,#3d7be8);color:#fff;padding:26px 20px}
+header h1{font-size:20px} header .sub{opacity:.9;font-size:12.5px;margin-top:2px}
+.wrap{max-width:1060px;margin:0 auto;padding:16px 20px 60px}
+.drop{border:2px dashed #b9c6dd;border-radius:12px;background:#fff;padding:34px;text-align:center;
+color:var(--ink2);cursor:pointer;transition:.15s;margin:18px 0}
+.drop:hover,.drop.on{border-color:var(--brand);background:var(--soft)}
+.drop b{color:var(--brand)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:14px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+.card .n{font-size:25px;font-weight:700;color:var(--brand)}
+.card.ok .n{color:var(--ok)} .card.bad .n{color:var(--bad)} .card.warn .n{color:var(--warn)}
+.card .t{font-size:12px;color:var(--ink2)}
+h2{font-size:16px;margin:24px 0 10px;border-left:4px solid var(--brand);padding-left:10px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px}
+th{background:#f0f4fa;text-align:left;padding:8px 12px;color:var(--ink2);font-size:12.5px}
+td{padding:8px 12px;border-top:1px solid #eef1f5;vertical-align:top}
+tr:hover td{background:#f8fafd}
+.tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;font-weight:600}
+.t-ok{background:var(--oks);color:var(--ok)} .t-bad{background:var(--bs);color:var(--bad)}
+.t-warn{background:var(--ws);color:var(--warn)} .t-info{background:var(--is);color:var(--info)}
+.t-dim{background:#eef1f5;color:var(--ink2)}
+.evi{font-family:Consolas,monospace;font-size:11.5px;color:var(--ink2);word-break:break-all}
+details{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.pill{font-size:11px;padding:1px 8px;border-radius:999px;margin-left:8px}
+footer{margin-top:36px;color:var(--ink2);font-size:12px;text-align:center}
+#demo{font-size:12px;color:var(--brand);cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<header><div style="max-width:1060px;margin:0 auto">
+  <h1>⛵ Keel · 契约与报告查看器</h1>
+  <div class="sub">拖入 Report.to_json() 产物（与可选的 invariants.json）· 全本地渲染，无网络请求 · <span id="demo">载入演示数据</span></div>
+</div></header>
+<div class="wrap" id="app">
+  <div class="drop" id="drop">
+    将 <b>report.json</b> 拖到此处（可同时拖 <b>invariants.json</b>：InvariantSet 导出格式）<br>
+    <span style="font-size:12px">或点击选择文件</span>
+    <input type="file" id="file" accept=".json" multiple style="display:none">
+  </div>
+  <div id="view"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s), esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let R=null,I=null;
+function sevTag(s){const m={'P0':'t-bad','P1':'t-bad','P2':'t-warn','P3':'t-warn','观察':'t-info'};return `<span class="tag ${m[s]||'t-dim'}">${esc(s)}</span>`}
+function render(){
+  if(!R){return}
+  const s=R.stats||{};const cards=[['断言通过',`${s.passed}/${s.total}`,(s.failed?'bad':'ok')],['失败',s.failed??0,(s.failed?'bad':'ok')]];
+  ['P0 阻塞','P1 严重','P2 一般','P3 轻微','观察'].forEach(k=>{if(s[k])cards.push([k,s[k],k.startsWith('P')&&k<'P3'?'bad':'warn'])});
+  let h=`<h2 style="margin-top:6px">${esc(R.title)} <span class="pill t-dim">${esc(R.date||'')}</span></h2>
+  <p style="font-size:13.5px;color:var(--ink2)">${esc(R.conclusion||'')}</p>
+  <div class="grid">${cards.map(c=>`<div class="card ${c[2]}"><div class="n">${esc(c[1])}</div><div class="t">${esc(c[0])}</div></div>`).join('')}</div>`;
+  if(I){const st=I.stats||{};const rows=(I.invariants||[]).map(v=>{const m={confirmed:'t-ok',draft:'t-warn',unsourced:'t-bad'};
+    return `<tr><td><code>${esc(v.id)}</code></td><td>${esc(v.rule)}</td><td><span class="tag ${m[v.status]||'t-dim'}">${esc(v.status)}</span></td><td>v${v.version}</td></tr>`}).join('');
+    h+=`<h2>契约不变量</h2><div class="grid">${Object.entries(st).map(([k,v])=>`<div class="card ${k==='confirmed'?'ok':k==='unsourced'?'bad':'warn'}"><div class="n">${v}</div><div class="t">${esc(k)}</div></div>`).join('')}</div>
+    <table><tr><th>ID</th><th>规则</th><th>状态</th><th>版本</th></tr>${rows}</table>`}
+  h+=`<h2>断言明细</h2>${(R.runs||[]).map(r=>`<details ${r.failed&&r.failed.length?'open':''}><summary>${esc(r.name||'-')} · ${r.passed??'?'}/${r.total??'?'}
+    ${r.failed&&r.failed.length?`<span class="tag t-bad">${r.failed.length} 失败</span>`:'<span class="tag t-ok">全绿</span>'}</summary>
+    <table style="margin-top:8px"><tr><th style="width:52px">结果</th><th>断言</th><th>证据</th></tr>
+    ${(r.checks||[]).map(c=>`<tr><td><span class="tag ${c.ok?'t-ok':'t-bad'}">${c.ok?'PASS':'FAIL'}</span></td><td>${esc(c.name)}</td><td class="evi">${esc(c.evidence)}</td></tr>`).join('')}
+    </table></details>`).join('')}`;
+  if((R.findings||[]).length){h+=`<h2>缺陷与观察</h2><table><tr><th>编号</th><th>级别</th><th>发现</th><th>建议</th></tr>
+    ${R.findings.map(f=>`<tr><td><code>${esc(f.id)}</code></td><td>${sevTag(f.severity)}</td><td>${esc(f.title)}</td><td style="color:var(--ink2)">${esc(f.suggestion||'-')}</td></tr>`).join('')}</table>`}
+  h+=`<footer>Keel · 契约驱动的通用 B 端系统穿行测试框架</footer>`;
+  $('#view').innerHTML=h;
+}
+function load(files){for(const f of files){const rd=new FileReader();rd.onload=()=>{try{const j=JSON.parse(rd.result);
+  if(j.invariants||Array.isArray(j)&&j[0]&&j[0].check){I=Array.isArray(j)?{invariants:j,stats:j.reduce((a,v)=>(a[v.status]=(a[v.status]||0)+1,a),{})}:j}
+  else{R=j}render()}catch(e){alert('解析失败: '+e.message)}};rd.readAsText(f)}}
+const d=$('#drop'),fi=$('#file');
+d.onclick=()=>fi.click();fi.onchange=()=>load(fi.files);
+['dragover','dragenter'].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.add('on')}));
+['dragleave','drop'].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.remove('on')}));
+d.addEventListener('drop',ev=>load(ev.dataTransfer.files));
+$('#demo').onclick=()=>{R={title:'演示 · 守卫与勾稽回归',date:'2026-10-03',conclusion:'守卫与勾稽全绿, 1 条观察',
+ stats:{passed:6,total:7,failed:1,'观察':1},
+ runs:[{name:'J1 主数据守卫',passed:6,total:7,failed:['只读角色越权写'],checks:[
+  {name:'闭期置0 → 400 PERIOD_CLOSED',ok:true,evidence:'400 PERIOD_CLOSED 存在已结账期间'},
+  {name:'只读角色越权写 → 403',ok:false,evidence:'None (2xx!)'},
+  {name:'试算三层·期初 diff=0',ok:true,evidence:'diff=0'},
+  {name:'试算三层·期末 diff=0',ok:true,evidence:'diff=0'},
+  {name:'[勾稽] 投入=产出',ok:true,evidence:'Δ=0'},
+  {name:'[Δ] 库存 -2',ok:true,evidence:'实际Δ=-2'},
+  {name:'[勾稽] 对账 allMatched',ok:true,evidence:'3/3'}]}],
+ findings:[{id:'O-X-1',severity:'观察',title:'审计日志对非法租户返回 200 空',evidence:'GET /audit-logs?tenant=ghost → 200 {items:[]}',suggestion:'与兄弟端点(403/404)对齐'}]};
+ I={stats:{confirmed:2,draft:1,unsourced:1},invariants:[
+  {id:'INV-TB-BALANCE',rule:'试算三层平衡',status:'confirmed',version:1},
+  {id:'INV-JOURNAL-EQ',rule:'日记账净额=科目变动',status:'confirmed',version:1},
+  {id:'INV-PIPELINE',rule:'各阶段金额之和=总额',status:'draft',version:1},
+  {id:'INV-FEE-CALIBER',rule:'费用取数口径',status:'unsourced',version:2}]};render()};
+</script>
+</body>
+</html>
