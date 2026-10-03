@@ -45,6 +45,16 @@ TOOLS = [
             "path": {"type": "string"},
         }, "required": ["project", "path"]},
     }, {
+        "name": "keel_project_config",
+        "description": "(P1.6)远端修改项目 envAuth/env 配置(字段白名单+schema校验+敏感值掩码), "
+                       "解决 file_put 不能写 project.json 导致的闭环断点",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string"},
+            "envAuth": {"type": "object", "description": "认证配置(四型), 见 keel_guide"},
+            "env": {"type": "object", "description": "环境地址 {dev: url, test: url}"},
+            "remove_envAuth": {"type": "boolean", "description": "回滚: 删除 envAuth"},
+        }, "required": ["project"]},
+    }, {
         "name": "keel_project_create",
         "description": "(先调 keel_guide 看工作流) 创建 Keel 项目空间(环境登记+契约/旅程模板+状态事实源)",
         "inputSchema": {"type": "object", "properties": {
@@ -145,6 +155,18 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
         from .guide import get_guide
         out = get_guide(str(args.get("section", "")))
         return {"ok": True, "exitCode": 0, "output": out}
+    if name == "keel_project_config":
+        from .project_config import ConfigOpError, project_config
+        try:
+            out = project_config(root, args["project"],
+                                 env_auth=args.get("envAuth"),
+                                 env=args.get("env"),
+                                 remove_env_auth=args.get("remove_envAuth", False))
+            out = {"ok": True, "exitCode": 0, **out}
+        except ConfigOpError as e:
+            out = {"ok": False, "exitCode": 1, "error": e.code, "message": e.message}
+        audit(name, args, out["ok"], root)
+        return out
     if name in ("keel_file_put", "keel_file_get"):
         from .fileops import FileOpError, file_get, file_put
         try:

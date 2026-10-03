@@ -5,5 +5,17 @@
   "dev": "http://192.168.8.181:8802",
   "test": ""
  },
- "issueRepo": "wangjiansudi-hash/crm-suite"
+ "issueRepo": "wangjiansudi-hash/crm-suite",
+ "envAuth": {
+  "type": "credentials",
+  "path": "/api/v1/auth/login",
+  "accounts": {
+   "admin": {
+    "username": "13800000001",
+    "password": "{env:CRM_PWD}"
+   }
+  },
+  "tokenField": "token",
+  "roleField": "user.roleCode"
+ }
 }

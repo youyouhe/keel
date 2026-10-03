@@ -61,7 +61,7 @@ class TestMcpServer(unittest.TestCase):
         for expect in ("keel_project_create", "keel_status_get", "keel_journey_run",
                        "keel_contract_verify", "keel_report_render", "keel_issue_sync"):
             self.assertIn(expect, names)
-        self.assertEqual(len(names), 9)  # guide + 六生命周期 + file_put/get
+        self.assertEqual(len(names), 10)  # guide + 六生命周期 + file_put/get + project_config
 
     def test_02_create_and_run_over_mcp(self):
         r = self.client.call("keel_project_create",
