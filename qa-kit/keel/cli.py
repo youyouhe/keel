@@ -129,7 +129,14 @@ def cmd_journey_run(a):
     hp.write_text(report.render_html(), encoding="utf-8")
     total = sum(len(r.checks) for r in all_runs)
     passed = sum(r.passed for r in all_runs)
-    p.record_run(journey.name, result.ok, passed, total, result.aborted_at, str(jp))
+    # API/UI 拆分摘要(manager 第一眼可区分)
+    api_runs = [r for r in all_runs if not r.name.startswith("UI")]
+    ui_runs = [r for r in all_runs if r.name.startswith("UI")]
+    api_p = sum(r.passed for r in api_runs); api_n = sum(len(r.checks) for r in api_runs)
+    ui_p = sum(r.passed for r in ui_runs); ui_n = sum(len(r.checks) for r in ui_runs)
+    breakdown = f"API {api_p}/{api_n}" + (f" + UI {ui_p}/{ui_n}" if ui_n else "") + f" = {passed}/{total}"
+    print(f"拆分: {breakdown}")
+    p.record_run(journey.name, result.ok, passed, total, result.aborted_at, str(jp), runs=all_runs)
     print(result.summary())
     print(f"报告: {jp}")
     sys.exit(0 if result.ok else 1)

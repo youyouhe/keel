@@ -208,8 +208,15 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
                 if "/" in line and ("断言" in line or "passed" in line or "中止" in line or "完成" in line):
                     summary_line = line.strip()
                     break
+            # 提取拆分行
+            breakdown = ""
+            for line in output.splitlines():
+                if line.startswith("拆分:"):
+                    breakdown = line.replace("拆分:", "").strip()
+                    break
             return {"output_tail": output[-800:], "report": report_path,
-                    "summary": summary_line, "exitCode": code}
+                    "summary": summary_line, "breakdown": breakdown,
+                    "exitCode": code}
 
         job_id = job_mgr.submit("journey_run", _run_journey)
         audit(name, args, True, root)

@@ -107,13 +107,23 @@ class KeelProject:
         return mod
 
     def record_run(self, journey: str, ok: bool, passed: int, total: int,
-                   aborted_at: str | None, report_path: str) -> None:
+                   aborted_at: str | None, report_path: str,
+                   runs: list | None = None) -> None:
         st = self.state
         st["lastRun"] = {
             "time": time.strftime("%Y-%m-%d %H:%M:%S"), "journey": journey,
             "ok": ok, "passed": passed, "total": total,
             "abortedAt": aborted_at, "report": report_path,
         }
+        # API/UI 拆分(有 UI 段时 manager 可一眼区分)
+        if runs:
+            ui_runs = [r for r in runs if r.name.startswith("UI")]
+            if ui_runs:
+                api_runs = [r for r in runs if not r.name.startswith("UI")]
+                st["lastRun"]["breakdown"] = {
+                    "api": f"{sum(r.passed for r in api_runs)}/{sum(len(r.checks) for r in api_runs)}",
+                    "ui": f"{sum(r.passed for r in ui_runs)}/{sum(len(r.checks) for r in ui_runs)}",
+                }
         st["runs"].append({"time": st["lastRun"]["time"], "ok": ok,
                            "passed": passed, "total": total})
         st["runs"] = st["runs"][-50:]          # 只留最近 50 轮
