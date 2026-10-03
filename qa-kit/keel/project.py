@@ -16,16 +16,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-JOURNEY_TEMPLATE = '''"""{name} 领域旅程插件 — keel journey run 会加载 build_journey。"""
+JOURNEY_TEMPLATE = '''"""{name} 领域旅程插件 — keel journey run 会加载 build_journey。
+
+api 是已按 project.json env.auth 配置好认证的 Client:
+  - type=demo-login → 直接 api.as_role("R02") 后调用
+  - 未配置 auth 的环境 → api 即裸 Client
+"""
 from keel import Journey, Step
+
+ROLE = "R02"   # 按角色矩阵调整
 
 
 def build_journey(api) -> Journey:
     j = Journey("{name} 穿行")
 
     def smoke(run):
-        r = api.get("/api/v1/health")          # 换成你的端点
-        run.check("冒烟: 健康检查", r.ok, r.status)
+        r = api.as_role(ROLE).get("/api/v1/account-sets")   # 换成你的端点
+        run.check("冒烟: 登录+清单", r.ok, r.status)
 
     j.register("J0 越权与多租户", [Step("冒烟", smoke)])
     # 按 9 段骨架继续注册: j.register("J2 档案域", [...]) ...
@@ -63,6 +70,8 @@ class KeelProject:
         (p / "project.json").write_text(json.dumps({
             "name": name, "createdAt": time.strftime("%Y-%m-%d %H:%M"),
             "env": {"dev": env_dev, "test": ""},
+            "envAuth": {"type": "", "path": "", "roleField": "",
+                        "hint": "demo-login 项目: type=demo-login + path + roleField, CLI 将自动装配认证"},
             "issueRepo": issue_repo,
         }, ensure_ascii=False, indent=1), encoding="utf-8")
         (p / "contracts" / "invariants.json").write_text(

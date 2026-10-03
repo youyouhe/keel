@@ -1,0 +1,282 @@
+{
+ "tb202603": {
+  "initialDebit": 1352791.4,
+  "initialCredit": 1352791.4,
+  "closingDebit": 1386548.8,
+  "closingCredit": 1386548.8,
+  "balanced": true,
+  "initialDiff": 0,
+  "closingDiff": 0
+ },
+ "inv": {
+  "period": "202603",
+  "warehouseId": null,
+  "items": [
+   {
+    "accountCode": "1403",
+    "accountName": "原材料",
+    "accountBalanceYuan": 0,
+    "adjustmentsYuan": 0,
+    "cardTotalYuan": 0,
+    "differenceYuan": 0,
+    "matched": true
+   },
+   {
+    "accountCode": "1405",
+    "accountName": "库存商品",
+    "accountBalanceYuan": 78488.88,
+    "adjustmentsYuan": 0,
+    "cardTotalYuan": 78488.88,
+    "differenceYuan": 0,
+    "matched": true
+   }
+  ],
+  "allMatched": true,
+  "details": [
+   {
+    "productId": "inv_p_9fd96818aa",
+    "sku": "ACF1",
+    "name": "验收FIFO品",
+    "warehouseName": "总仓",
+    "quantity": 2,
+    "amountYuan": 200
+   },
+   {
+    "productId": "inv_p_9fd96818aa",
+    "sku": "ACF1",
+    "name": "验收FIFO品",
+    "warehouseName": "验收仓",
+    "quantity": 4,
+    "amountYuan": 640
+   },
+   {
+    "productId": "inv_p_9a67e9beae",
+    "sku": "ACW1",
+    "name": "验收加权品",
+    "warehouseName": "验收仓",
+    "quantity": 27,
+    "amountYuan": 5862.88
+   },
+   {
+    "productId": "inv_p_1d886494f2",
+    "sku": "OPENING-GAP-FILL",
+    "name": "总账期初补录-占位商品",
+    "warehouseName": "验收仓",
+    "quantity": 1,
+    "amountYuan": 200
+   },
+   {
+    "productId": "inv_p_c35e2986ac",
+    "sku": "PFG6293",
+    "name": "FIFO测试品FG6293",
+    "warehouseName": "总仓",
+    "quantity": 4,
+    "amountYuan": 400
+   },
+   {
+    "productId": "inv_p_c35e2986ac",
+    "sku": "PFG6293",
+    "name": "FIFO测试品FG6293",
+    "warehouseName": "测试仓FG6293",
+    "quantity": 17,
+    "amountYuan": 1700
+   },
+   {
+    "productId": "inv_p_bc38039248",
+    "sku": "SKU001",
+    "name": "办公椅",
+    "warehouseName": "总仓",
+    "quantity": 5,
+    "amountYuan": 5000
+   },
+   {
+    "productId": "inv_p_935969dbec",
+    "sku": "SKU002",
+    "name": "打印纸",
+    "warehouseName": "总仓",
+    "quantity": 109,
+    "amountYuan": 21600
+   },
+   {
+    "productId": "inv_p_4e185b5c27",
+    "sku": "SKU003",
+    "name": "笔记本电脑",
+    "warehouseName": "总仓",
+    "quantity": 4,
+    "amountYuan": 41686
+   },
+   {
+    "productId": "inv_p_79d3081d56",
+    "sku": "SO16696",
+    "name": "出库测试品SO16696",
+    "warehouseName": "测试仓FG6293",
+    "quantity": 10,
+    "amountYuan": 500
+   },
+   {
+    "productId": "inv_p_9f0e5c1b27",
+    "sku": "SO62682",
+    "name": "出库测试品SO62682",
+    "warehouseName": "测试仓FG6293",
+    "quantity": 4,
+    "amountYuan": 200
+   },
+   {
+    "productId": "inv_p_0a0a41be5b",
+    "sku": "SO64406",
+    "name": "出库测试品SO64406",
+    "warehouseName": "测试仓FG6293",
+    "quantity": 10,
+    "amountYuan": 500
+   }
+  ]
+ },
+ "funds": {
+  "period": "202603",
+  "items": [
+   {
+    "name": "库存现金",
+    "journalAccount": "现金",
+    "accountCode": "1001",
+    "journalNet": 608,
+    "accountMovement": 608,
+    "difference": 0,
+    "matched": true
+   },
+   {
+    "name": "银行存款",
+    "journalAccount": "银行",
+    "accountCode": "1002",
+    "journalNet": 23232,
+    "accountMovement": 23232,
+    "difference": 0,
+    "matched": true
+   }
+  ],
+  "allMatched": true,
+  "suspects": []
+ },
+ "sets": [
+  {
+   "appasid": "as_001",
+   "name": "成都众乐乐软件有限公司",
+   "currentPeriod": "202603",
+   "standard": "小企业会计准则",
+   "taxpayerType": "一般纳税人",
+   "creditCode": "91510124MA691BKU4X",
+   "isProEdition": true,
+   "trialDaysRemaining": 28,
+   "closedPeriods": [
+    "202601",
+    "202602"
+   ]
+  },
+  {
+   "appasid": "as_002",
+   "name": "深圳市云极智联科技有限公司",
+   "currentPeriod": "202602",
+   "standard": "小企业会计准则",
+   "taxpayerType": "小规模纳税人",
+   "creditCode": "91440300MA5EXY789Q",
+   "isProEdition": false,
+   "trialDaysRemaining": 0,
+   "closedPeriods": []
+  },
+  {
+   "appasid": "as_003",
+   "name": "广州鼎丰商贸发展有限责任公司",
+   "currentPeriod": "202602",
+   "standard": "企业会计准则",
+   "taxpayerType": "一般纳税人",
+   "creditCode": "91440101MA5D99882K",
+   "isProEdition": true,
+   "trialDaysRemaining": 15,
+   "closedPeriods": []
+  }
+ ],
+ "status202601": {
+  "period": "202601",
+  "isClosed": true,
+  "closedAt": "2026-10-02 15:26:47",
+  "closedBy": "陈代账",
+  "hasClosingVoucher": true,
+  "closingVoucherId": "vch_b53bb68ecdfb",
+  "checks": [
+   {
+    "summary": "凭证借贷平衡核验",
+    "account": "全部会计科目",
+    "rule": "本期所有记账凭证借贷合计差额为 0.00 元",
+    "passed": true
+   },
+   {
+    "summary": "未审核凭证核查",
+    "account": "记账凭证池",
+    "rule": "本期录入 6 张凭证均已完成主管审核签章",
+    "passed": true
+   },
+   {
+    "summary": "损益类科目余额核实",
+    "account": "5001~5801",
+    "rule": "损益科目期末发生额已归集待结转本年利润 (共 4 个科目有发生额)",
+    "passed": true
+   },
+   {
+    "summary": "固定资产折旧计提校验",
+    "account": "1602 累计折旧",
+    "rule": "本期资产月度折旧计提凭证已完整过账",
+    "passed": true
+   },
+   {
+    "summary": "账实核对(资金类)",
+    "account": "1001/1002/1012",
+    "rule": "资金类科目总账发生净额与日记账流水一致,账实相符",
+    "passed": true
+   }
+  ],
+  "allChecksPassed": true
+ },
+ "status202602": {
+  "period": "202602",
+  "isClosed": true,
+  "closedAt": "2026-10-03 02:46:01",
+  "closedBy": "陈代账",
+  "hasClosingVoucher": true,
+  "closingVoucherId": "vch_049e241a1f93",
+  "checks": [
+   {
+    "summary": "凭证借贷平衡核验",
+    "account": "全部会计科目",
+    "rule": "本期所有记账凭证借贷合计差额为 0.00 元",
+    "passed": true
+   },
+   {
+    "summary": "未审核凭证核查",
+    "account": "记账凭证池",
+    "rule": "本期录入 76 张凭证均已完成主管审核签章",
+    "passed": true
+   },
+   {
+    "summary": "损益类科目余额核实",
+    "account": "5001~5801",
+    "rule": "损益科目期末发生额已归集待结转本年利润 (共 8 个科目有发生额)",
+    "passed": true
+   },
+   {
+    "summary": "固定资产折旧计提校验",
+    "account": "1602 累计折旧",
+    "rule": "本期资产月度折旧计提凭证已完整过账",
+    "passed": true
+   },
+   {
+    "summary": "账实核对(资金类)",
+    "account": "1001/1002/1012",
+    "rule": "资金类科目总账发生净额与日记账流水一致,账实相符",
+    "passed": true
+   }
+  ],
+  "allChecksPassed": true
+ },
+ "as999": 403,
+ "noTenant": 403,
+ "mcpTools": 43
+}

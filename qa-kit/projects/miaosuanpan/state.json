@@ -1,0 +1,27 @@
+{
+ "baseline": null,
+ "lastRun": {
+  "time": "2026-10-03 15:02:13",
+  "journey": "miaosuanpan 穿行",
+  "ok": true,
+  "passed": 8,
+  "total": 8,
+  "abortedAt": null,
+  "report": "projects\\miaosuanpan\\reports\\report-20261003-150213.json"
+ },
+ "contractVersion": 0,
+ "runs": [
+  {
+   "time": "2026-10-03 14:54:35",
+   "ok": false,
+   "passed": 0,
+   "total": 1
+  },
+  {
+   "time": "2026-10-03 15:02:13",
+   "ok": true,
+   "passed": 8,
+   "total": 8
+  }
+ ]
+}

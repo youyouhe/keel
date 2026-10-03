@@ -1,0 +1,21 @@
+{
+ "name": "miaosuanpan",
+ "createdAt": "2026-10-03 14:54",
+ "env": {
+  "dev": "http://192.168.8.181:8801",
+  "test": ""
+ },
+ "issueRepo": "wangjiansudi-hash/miaosuanpan",
+ "envAuth": {
+  "type": "demo-login",
+  "path": "/api/v1/auth/demo-login",
+  "roleField": "roleCode",
+  "roles": [
+   "R01",
+   "R02",
+   "R04",
+   "R05",
+   "R06"
+  ]
+ }
+}

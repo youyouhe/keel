@@ -1,2 +1,6 @@
 {"time": "2026-10-03 14:43:11", "tool": "keel_project_create", "args": {"project": "smoke"}, "ok": true}
 {"time": "2026-10-03 14:43:11", "tool": "keel_status_get", "args": {"project": "smoke"}, "ok": true}
+{"time": "2026-10-03 14:54:04", "tool": "keel_project_create", "args": {"project": "miaosuanpan", "env_dev": "http://192.168.8.181:8801", "issue_repo": "wangjiansudi-hash/miaosuanpan"}, "ok": true}
+{"time": "2026-10-03 14:54:04", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-03 14:54:34", "tool": "keel_issue_sync", "args": {"project": "miaosuanpan", "dry_run": true}, "ok": false}
+{"time": "2026-10-03 14:54:35", "tool": "keel_journey_run", "args": {"project": "miaosuanpan", "section": "J0"}, "ok": false}

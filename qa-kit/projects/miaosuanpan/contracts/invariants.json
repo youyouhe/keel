@@ -1,0 +1,230 @@
+[
+ {
+  "id": "INV-TB-INITIAL",
+  "rule": "试算平衡·期初差额=0",
+  "evidence": "EPF J4-3 每轮终态",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "tb202603.initialDiff"
+   },
+   "op": "==",
+   "right": 0
+  }
+ },
+ {
+  "id": "INV-TB-CLOSING",
+  "rule": "试算平衡·期末差额=0",
+  "evidence": "EPF J4-3",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "tb202603.closingDiff"
+   },
+   "op": "==",
+   "right": 0
+  }
+ },
+ {
+  "id": "INV-TB-BALANCED",
+  "rule": "试算 balanced=true",
+  "evidence": "EPF J1-6",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "tb202603.balanced"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-TB-DEBIT-EQ",
+  "rule": "期初借贷合计相等(复式守恒)",
+  "evidence": "EPF J4-3",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "tb202603.initialDebit"
+   },
+   "op": "==",
+   "right": {
+    "path": "tb202603.initialCredit"
+   }
+  }
+ },
+ {
+  "id": "INV-TB-CLOSING-EQ",
+  "rule": "期末借贷合计相等",
+  "evidence": "EPF J4-3",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "tb202603.closingDebit"
+   },
+   "op": "==",
+   "right": {
+    "path": "tb202603.closingCredit"
+   }
+  }
+ },
+ {
+  "id": "INV-INV-MATCH",
+  "rule": "存货对账 allMatched(账实相符)",
+  "evidence": "轮测 B 组(P0 起)",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "inv.allMatched"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-FUND-CASH",
+  "rule": "资金勾稽·现金行 matched(账账相符)",
+  "evidence": "EPF J3-F F2",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "funds.items[0].matched"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-FUND-BANK",
+  "rule": "资金勾稽·银行行 matched",
+  "evidence": "EPF J3-F F2",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "funds.items[1].matched"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-SET-COUNT",
+  "rule": "账套数量≥3(第三账套存在=多租户稳定)",
+  "evidence": "J0-1",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "sets[2].appasid"
+   },
+   "op": "!=",
+   "right": ""
+  }
+ },
+ {
+  "id": "INV-AS999-DENY",
+  "rule": "非法租户 as_999 → 403+(不泄露)",
+  "evidence": "J0-2 三代口径",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "as999"
+   },
+   "op": ">=",
+   "right": 403
+  }
+ },
+ {
+  "id": "INV-NOTENANT-DENY",
+  "rule": "缺省 appasid → 拒(不乱代入)",
+  "evidence": "J0-3",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "noTenant"
+   },
+   "op": ">=",
+   "right": 400
+  }
+ },
+ {
+  "id": "INV-CLOSED-202601",
+  "rule": "202601 已结账(基线)",
+  "evidence": "EPF 基线(含合法补提折旧口径)",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "status202601.isClosed"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-CARRIED-202601",
+  "rule": "202601 已结转",
+  "evidence": "EPF 基线",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "status202601.hasClosingVoucher"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-CLOSED-202602",
+  "rule": "202602 已结账",
+  "evidence": "J4-8b",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "status202602.isClosed"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-CARRIED-202602",
+  "rule": "202602 已结转",
+  "evidence": "J4-8a",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "status202602.hasClosingVoucher"
+   },
+   "op": "==",
+   "right": true
+  }
+ },
+ {
+  "id": "INV-MCP-TOOLS",
+  "rule": "MCP 工具面=43(测试通道稳定)",
+  "evidence": "EPF preflight 三角色一致",
+  "version": 1,
+  "status": "confirmed",
+  "check": {
+   "left": {
+    "path": "mcpTools"
+   },
+   "op": "==",
+   "right": 43
+  }
+ }
+]

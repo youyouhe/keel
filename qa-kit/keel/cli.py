@@ -35,10 +35,15 @@ def _proj(args) -> "object":
 
 
 def _env_api(meta: dict, which: str = "dev"):
-    from .client import Client
+    from .client import Client, demo_login
     url = (meta.get("env") or {}).get(which)
     if not url:
         sys.exit(f"未登记 {which} 环境地址 (project.json env.{which})")
+    auth_cfg = meta.get("envAuth") or {}
+    if auth_cfg.get("type") == "demo-login" and auth_cfg.get("path"):
+        return Client(url, auth=demo_login(
+            role_field=auth_cfg.get("roleField", "roleCode"),
+            roles_path=auth_cfg.get("path")))
     return Client(url)
 
 
