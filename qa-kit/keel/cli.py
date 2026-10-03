@@ -188,12 +188,18 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("render-report");  s.add_argument("input")
     s.add_argument("-o", "--output", default="report.html")
 
+    s = sub.add_parser("mcp-server");     s.add_argument("--port", type=int, default=8902)
+    s.add_argument("--token", default=""); s.add_argument("--root", default=DEFAULT_ROOT)
+
     a = pr.parse_args(argv)
     if not hasattr(a, "root"):
         a.root = DEFAULT_ROOT                          # 子解析器未定义时用全局
     if a.cmd == "render-report":                      # v0.2 兼容
         a.project = ""
         cmd_report_render(a); return 0
+    if a.cmd == "mcp-server":
+        from .mcp_server import serve
+        serve(a.port, a.token or None, a.root); return 0
     a.fn(a)
     return 0
 

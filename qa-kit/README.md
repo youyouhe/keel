@@ -71,7 +71,18 @@ keel issue sync <A> --repo owner/repo [--dry-run]            # 失败项 → gh 
 ```
 
 项目空间 `projects/<A>/`(project.json 环境登记 · contracts/ · tests/journeys.py 领域插件 ·
-reports/ · state.json 状态事实源)。v0.5 候选: keel-mcp server(同一核心的 MCP 壳)。
+reports/ · state.json 状态事实源)。v0.5 已交付 — keel-mcp server(同一核心的 MCP 壳):
+
+```bash
+python -m keel mcp-server --port 8902 [--token SECRET] [--root projects]
+# POST /mcp · JSON-RPC 2.0 · initialize / tools/list / tools/call(兼容 SSE)
+# 六工具: keel_project_create / keel_status_get / keel_journey_run /
+#         keel_contract_verify / keel_report_render / keel_issue_sync
+# 鉴权: Bearer token(--token 或 KEEL_MCP_TOKEN; 未设=仅本机开放)
+```
+
+manager agent 接入(`claude mcp add --transport http keel-mcp http://127.0.0.1:8902/mcp -H "Authorization: Bearer ..."`);
+自举验证: keel.channels.mcp.McpClient 全链路测试(22 项自测)。
 
 ## 下一步（v0.3 候选）
 
