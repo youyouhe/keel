@@ -1,6 +1,6 @@
 # qa-kit — Keel 测试套件（Python）
 
-从起源项目 8 天 31 批次实测资产提炼的可复用库，**新系统第一天即可 import**。零强制依赖（标准库实现）；fuzz 可选装 `pip install .[fuzz]`。
+从真实 B 端项目回归实践提炼的可复用库，**新系统第一天即可 import**。零强制依赖（标准库实现）；fuzz 可选装 `pip install .[fuzz]`。
 
 ## 安装与自测
 
