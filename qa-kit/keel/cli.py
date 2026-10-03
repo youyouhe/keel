@@ -34,17 +34,17 @@ def _proj(args) -> "object":
     return KeelProject(p)
 
 
-def _env_api(meta: dict, which: str = "dev"):
-    from .client import Client, demo_login
+def _env_api(meta: dict, which: str = "dev", project_root=None):
+    from .client import Client
+    from .auth import build_auth, AuthError
     url = (meta.get("env") or {}).get(which)
     if not url:
         sys.exit(f"未登记 {which} 环境地址 (project.json env.{which})")
-    auth_cfg = meta.get("envAuth") or {}
-    if auth_cfg.get("type") == "demo-login" and auth_cfg.get("path"):
-        return Client(url, auth=demo_login(
-            role_field=auth_cfg.get("roleField", "roleCode"),
-            roles_path=auth_cfg.get("path")))
-    return Client(url)
+    try:
+        auth = build_auth(meta.get("envAuth") or {}, project_root)
+    except AuthError as e:
+        sys.exit(f"envAuth 配置错误: {e.code} — {e.message}")
+    return Client(url, auth=auth)
 
 
 def cmd_guide(a):
@@ -95,7 +95,7 @@ def cmd_contract_verify(a):
 def cmd_journey_run(a):
     p = _proj(a)
     mod = p.load_journey()
-    api = _env_api(p.meta, a.env)
+    api = _env_api(p.meta, a.env, project_root=p.root)
     journey = mod.build_journey(api)
     if a.section:
         journey._sections = [(s, st) for s, st in journey._sections if a.section in s]

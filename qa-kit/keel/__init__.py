@@ -5,6 +5,7 @@ L1 契约(contracts/) → L2 通道(client/mcp/ui/schemathesis)
 """
 __version__ = "0.1.0"
 
+from .auth import AuthError, build_auth
 from .client import ApiError, ApiResult, Client, RoleMatrix, demo_login
 from .primitives import CheckResult, Saga, TestRun
 from .baseline import Baseline, Drift, guarded
@@ -15,6 +16,7 @@ from .schemathesis import FuzzSummary, build_mini_spec, run_fuzz
 
 __all__ = [
     "ApiError", "ApiResult", "Client", "RoleMatrix", "demo_login",
+    "AuthError", "build_auth",
     "CheckResult", "Saga", "TestRun",
     "Baseline", "Drift", "guarded",
     "Finding", "Report", "Severity",

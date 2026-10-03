@@ -29,9 +29,37 @@ GUIDE = """# Keel 快速上手(给 agent / 测试工程师)
 
 ## project.json 关键字段
 - `env.dev`: 被测系统基地址
-- `envAuth`: {"type":"demo-login","path":"/auth路径","roleField":"roleCode"}
-  → CLI 自动装配认证, journeys 里直接 api.as_role("角色码")
 - `issueRepo`: "owner/repo" — issue_sync 的目标仓
+- `envAuth`: 认证配置, 四种类型(journeys 里 `api.as_role("key")` 切角色):
+
+  **demo-login 型**(演示系统):
+  ```json
+  {"type":"demo-login","path":"/api/v1/auth/demo-login","roleField":"roleCode"}
+  ```
+
+  **credentials 型**(真实产品 B 端, CRM 即此):
+  ```json
+  {"type":"credentials","path":"/api/v1/auth/login",
+   "accounts":{"admin":{"username":"13800000001","password":"{env:CRM_PWD}"}},
+   "tokenField":"token","roleField":"user.roleCode",
+   "roles":{"admin":"R01"}}
+  ```
+  password 支持 `{env:VAR}` 环境变量占位(E4, 不落盘)。
+  roles 表存在时登录后校验角色, 不匹配报 ROLE_MISMATCH(E2)。
+
+  **static-token 型**(预签发 API key):
+  ```json
+  {"type":"static-token","tokens":{"admin":"eyJ...","viewer":"eyJ..."}}
+  ```
+
+  **custom 型**(SSO/验证码等长尾):
+  ```json
+  {"type":"custom"}
+  ```
+  journeys.py 顶层定义: `def login(api, key) -> (token, roleCode)`。
+  Keel 调钩子取 token, 后续请求自动携带; 401 时自动重登一次(E1)。
+
+  ⚠ 未配 envAuth 时 as_role 报 ENV_AUTH_MISSING(E3), 不做静默 fallback。
 
 ## 常见坑
 - **信任边界(必读)**: `keel_file_put` 可写 `tests/journeys.py`——而 journeys.py 会被

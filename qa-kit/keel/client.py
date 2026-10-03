@@ -67,12 +67,17 @@ class Client:
 
     # ---- 认证 ----
     def as_role(self, role: str) -> "Client":
-        """切换角色(取/缓存 token)。"""
+        """切换角色(取/缓存 token); 未配 envAuth 显式报 ENV_AUTH_MISSING(E3)。"""
         if self._auth is None:
-            raise ValueError("未配置 auth 策略")
+            from .auth import AuthError
+            raise AuthError("ENV_AUTH_MISSING",
+                "项目未配置 envAuth(project.json envAuth.type); "
+                "裸客户端无法通过 as_role 获取认证。"
+                " 可选类型: demo-login / credentials / static-token / custom — 详见 keel guide 常见坑。")
         if role not in self._tokens:
             self._tokens[role] = self._auth(self, role)  # type: ignore[misc]
         self._current_token = self._tokens[role]
+        self._last_role = role
         return self
 
     def with_token(self, token: str) -> "Client":
@@ -102,6 +107,15 @@ class Client:
                 err = json.loads(e.read().decode()).get("error", {})
             except Exception:
                 err = {}
+            # E1: 401 且有 auth 策略 → 清 token 缓存重试一次(自动重登)
+            if e.code == 401 and self._auth and self._current_token:
+                self._tokens.clear()
+                self._current_token = None
+                # 找回最近的角色重登
+                # (不完美: 假设最后一次 as_role 的 key 可复用; 更精确需在 as_role 记 last_role)
+                if getattr(self, "_last_role", None):
+                    self.as_role(self._last_role)
+                    return self.request(method, path, body, params, expect)
             result = ApiResult(e.code)
             # 语义化异常仅在状态不在 expect 时抛出
             if e.code not in expect:
