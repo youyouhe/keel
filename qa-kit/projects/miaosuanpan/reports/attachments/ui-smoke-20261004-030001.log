@@ -1,0 +1,37 @@
+
+Running 11 tests using 1 worker
+
+[1/11] [setup] › tests\auth.setup.ts:4:1 › authenticate as R02 主管
+  1) [setup] › tests\auth.setup.ts:4:1 › authenticate as R02 主管 ────────────────────────────────────
+
+    TypeError: fetch failed
+
+      3 | // 妙算盘认证: REST demo-login 取 token → localStorage.msp_token → storageState 复用
+      4 | setup('authenticate as R02 主管', async ({ page }) => {
+    > 5 |   const res = await fetch('http://192.168.8.181:8801/api/v1/auth/demo-login', {
+        |               ^
+      6 |     method: 'POST',
+      7 |     headers: { 'Content-Type': 'application/json' },
+      8 |     body: JSON.stringify({ roleCode: 'R02' }),
+        at C:\Users\Administrator\qa-20260102\msp-playwright\tests\auth.setup.ts:5:15
+    [cause]: Error: connect ECONNREFUSED 192.168.8.181:8801
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth.setup.ts-authenticate-as-R02-主管-setup\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth.setup.ts-authenticate-as-R02-主管-setup\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\auth.setup.ts-authenticate-as-R02-主管-setup\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\auth.setup.ts-authenticate-as-R02-主管-setup\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [setup] › tests\auth.setup.ts:4:1 › authenticate as R02 主管 ─────────────────────────────────────
+  10 did not run
+

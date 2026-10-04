@@ -1,17 +1,13 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-04 01:17:14",
+  "time": "2026-10-04 03:02:03",
   "journey": "miaosuanpan 穿行",
   "ok": true,
   "passed": 9,
   "total": 9,
   "abortedAt": null,
-  "report": "projects\\miaosuanpan\\reports\\report-20261004-011714.json",
-  "breakdown": {
-   "api": "8/8",
-   "ui": "1/1"
-  }
+  "report": "projects\\miaosuanpan\\reports\\report-20261004-030203.json"
  },
  "contractVersion": 0,
  "runs": [
@@ -41,6 +37,24 @@
   },
   {
    "time": "2026-10-04 01:17:14",
+   "ok": true,
+   "passed": 9,
+   "total": 9
+  },
+  {
+   "time": "2026-10-04 01:19:38",
+   "ok": true,
+   "passed": 9,
+   "total": 9
+  },
+  {
+   "time": "2026-10-04 03:00:01",
+   "ok": false,
+   "passed": 0,
+   "total": 2
+  },
+  {
+   "time": "2026-10-04 03:02:03",
    "ok": true,
    "passed": 9,
    "total": 9

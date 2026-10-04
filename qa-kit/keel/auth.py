@@ -85,17 +85,49 @@ def _credentials_factory(cfg: dict) -> AuthFn:
     role_field = cfg.get("roleField", "")  # 登录响应中角色字段路径
     roles_check = cfg.get("roles", {})     # {key: 期望角色}
 
-    username_field = cfg.get("usernameField", "username")  # 可配 phone/email 等
+    username_field = cfg.get("usernameField", "username")  # 兼容旧方式(仅改发送键名)
+    login_body_tpl = cfg.get("loginBody")                   # 推荐: 模板映射(accounts 任意键)
 
     def _auth(client: Client, key: str) -> str:
         acct = accounts.get(key)
         if not acct:
             raise AuthError("ACCOUNT_NOT_FOUND", f"envAuth.accounts 中无 {key!r}")
         pwd = _resolve_env_placeholders(acct["password"])
-        body = json.dumps({username_field: acct["username"], "password": pwd}).encode()
+        if login_body_tpl:
+            # loginBody 模板: {"phone": "{username}", "password": "{password}"}
+            # 占位符 {key} 替换为 accounts[key][key] 的值; 模板键名 = 实际发送字段名
+            body_dict = {}
+            for send_key, tpl_val in login_body_tpl.items():
+                if not isinstance(tpl_val, str):
+                    body_dict[send_key] = tpl_val
+                    continue
+                # 替换 {placeholder}
+                import re as _re
+                def _sub(m):
+                    ph = m.group(1)
+                    if ph not in acct:
+                        raise AuthError("LOGIN_BODY_PLACEHOLDER",
+                            f"loginBody 占位符 {{{ph}}} 在 accounts[{key!r}] 中不存在; "
+                            f"可用键: {list(acct.keys())}")
+                    return _resolve_env_placeholders(str(acct[ph]))
+                body_dict[send_key] = _re.sub(r"\{(\w+)\}", _sub, tpl_val)
+            body = json.dumps(body_dict).encode()
+        else:
+            # 默认行为(向后兼容): usernameField 重命名 或 标准 username
+            body = json.dumps({username_field: acct["username"], "password": pwd}).encode()
         req = urllib.request.Request(client.base_url + path, data=body,
                                      headers={"Content-Type": "application/json"})
-        resp = json.load(urllib.request.urlopen(req))
+        try:
+            resp = json.load(urllib.request.urlopen(req))
+        except Exception as e:
+            detail = ""
+            if hasattr(e, "read"):
+                try:
+                    detail = e.read().decode()[:100]
+                except Exception:
+                    pass
+            raise AuthError("LOGIN_FAILED",
+                f"登录请求失败({path}): {type(e).__name__} {getattr(e, 'code', '')} {detail}")
         token = _dig(resp, token_field)
         if not token or not isinstance(token, str):
             raise AuthError("TOKEN_FIELD_MISSING", f"登录响应无 {token_field!r}")

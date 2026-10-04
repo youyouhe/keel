@@ -1,0 +1,16 @@
+
+Running 11 tests using 1 worker
+
+[1/11] [setup] › tests\auth.setup.ts:4:1 › authenticate as R02 主管
+[2/11] [msp] › tests\msp.spec.ts:6:1 › ① 冒烟: 主页显示当前账套与身份
+[3/11] [msp] › tests\msp.spec.ts:12:1 › ② 多账套: 顶栏账套切换器在位
+[4/11] [msp] › tests\msp.spec.ts:17:1 › ③ 凭证: 列表加载且含凭证号
+[5/11] [msp] › tests\msp.spec.ts:22:1 › ④ 账簿: 试算平衡显示
+[6/11] [msp] › tests\msp.spec.ts:27:1 › ⑤ 结账: 期末结转向导可达
+[7/11] [msp] › tests\msp.spec.ts:32:1 › ⑥ 报表: 资产负债表渲染
+[8/11] [msp] › tests\msp.spec.ts:38:1 › ⑦ 报表: 利润表净利列示
+[9/11] [msp] › tests\msp.spec.ts:44:1 › ⑧ 档案: 辅助核算四类可达
+[10/11] [msp] › tests\msp.spec.ts:52:1 › ⑨ 税务: 申报页加载
+[11/11] [msp] › tests\msp.spec.ts:57:1 › ⑩ 设置: 已结账期间列表(202601/202602)
+  11 passed (16.2s)
+

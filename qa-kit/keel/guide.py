@@ -46,6 +46,10 @@ GUIDE = """# Keel 快速上手(给 agent / 测试工程师)
   ```
   password 支持 `{env:VAR}` 环境变量占位(E4, 不落盘)。
   roles 表存在时登录后校验角色, 不匹配报 ROLE_MISMATCH(E2)。
+  **loginBody 模板**(P1 推荐): 当登录 API 字段不叫 username 时, 用模板映射:
+  `"loginBody": {"phone": "{username}", "password": "{password}"}`
+  占位符 {username}/{password} 替换为 accounts 对应值; 模板键名=实际发送字段。
+  旧方式 `usernameField: "phone"` 仍兼容(仅改发送键名)。
 
   **static-token 型**(预签发 API key):
   ```json

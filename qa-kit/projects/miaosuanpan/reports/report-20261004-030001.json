@@ -1,0 +1,66 @@
+{
+ "title": "miaosuanpan · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "存在失败/中止@J0 越权与多租户/登录冒烟",
+ "stats": {
+  "passed": 0,
+  "total": 2,
+  "failed": 2,
+  "P2 一般": 1
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 0,
+   "total": 1,
+   "failed": [
+    "登录冒烟 (异常)"
+   ],
+   "checks": [
+    {
+     "name": "登录冒烟 (异常)",
+     "ok": false,
+     "evidence": "HTTPError: HTTP Error 502: Bad Gateway"
+    }
+   ]
+  },
+  {
+   "name": "J7 报表勾稽",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 0,
+   "total": 0,
+   "failed": [],
+   "checks": []
+  },
+  {
+   "name": "UI 冒烟(壳调)",
+   "passed": 0,
+   "total": 1,
+   "failed": [
+    "[UI] 冒烟(退出码=1)"
+   ],
+   "checks": [
+    {
+     "name": "[UI] 冒烟(退出码=1)",
+     "ok": false,
+     "evidence": "elapsed=6.3s | ───────────────────────────────────────────────────────────────────\n\n\n  1 failed\n    [setup] › tests\\auth.setup.ts:4:1 › authenticate as R02 主管 ─────────────────────────────────────\n  10 did not run\n\n"
+    }
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-登录冒烟 (异常)",
+   "severity": "P2 一般",
+   "title": "登录冒烟 (异常)",
+   "evidence": "HTTPError: HTTP Error 502: Bad Gateway",
+   "suggestion": ""
+  }
+ ]
+}

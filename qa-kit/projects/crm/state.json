@@ -1,13 +1,13 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-04 00:59:12",
+  "time": "2026-10-04 11:10:05",
   "journey": "crm 穿行",
   "ok": true,
-  "passed": 37,
-  "total": 37,
+  "passed": 56,
+  "total": 56,
   "abortedAt": null,
-  "report": "projects\\crm\\reports\\report-20261004-005912.json"
+  "report": "projects\\crm\\reports\\report-20261004-111005.json"
  },
  "contractVersion": 0,
  "runs": [
@@ -88,6 +88,36 @@
    "ok": true,
    "passed": 37,
    "total": 37
+  },
+  {
+   "time": "2026-10-04 01:39:10",
+   "ok": false,
+   "passed": 35,
+   "total": 37
+  },
+  {
+   "time": "2026-10-04 01:40:12",
+   "ok": true,
+   "passed": 39,
+   "total": 39
+  },
+  {
+   "time": "2026-10-04 02:57:50",
+   "ok": false,
+   "passed": 37,
+   "total": 38
+  },
+  {
+   "time": "2026-10-04 02:58:55",
+   "ok": true,
+   "passed": 56,
+   "total": 56
+  },
+  {
+   "time": "2026-10-04 11:10:05",
+   "ok": true,
+   "passed": 56,
+   "total": 56
   }
  ]
 }
