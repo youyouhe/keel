@@ -1,0 +1,95 @@
+{
+ "title": "miaosuanpan · 旅程回归",
+ "date": "2026-10-05",
+ "conclusion": "存在失败/中止@None",
+ "stats": {
+  "passed": 10,
+  "total": 11,
+  "failed": 1,
+  "P2 一般": 1
+ },
+ "runs": [
+  {
+   "name": "J10 月结工作流全链(P2)",
+   "passed": 10,
+   "total": 10,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J10] · 靶期=当前期间",
+     "ok": true,
+     "evidence": "202605"
+    },
+    {
+     "name": "[J10] · 折旧计提(当期已提 409 亦过)",
+     "ok": true,
+     "evidence": "{'status': 201}"
+    },
+    {
+     "name": "[J10] · 制单两张 201(收入+费用计提,不动资金科目)",
+     "ok": true,
+     "evidence": "[201, 201]"
+    },
+    {
+     "name": "[J10] · 交叉审核完成(R05/R02 双通道,零未审)",
+     "ok": true,
+     "evidence": "{'remain': 0}"
+    },
+    {
+     "name": "[J10] 发起 month_close:RUNNING + 4 步册",
+     "ok": true,
+     "evidence": "{'status': 201, 'w': 'RUNNING'}"
+    },
+    {
+     "name": "[J10] advance → L2 结转门挂起(preflight 自动过)",
+     "ok": true,
+     "evidence": "{'w': 'WAITING_HUMAN', 'cur': 'carry_forward'}"
+    },
+    {
+     "name": "[J10] 批准结转 → verify 过 → L3 结账门",
+     "ok": true,
+     "evidence": "{'w': 'WAITING_HUMAN', 'steps': {'preflight': 'DONE', 'carry_forward': 'DONE', 'verify': 'DONE', 'close': 'WAITING_HUMAN'}, 'http': 200}"
+    },
+    {
+     "name": "[J10] 批准结账 → COMPLETED",
+     "ok": true,
+     "evidence": "{'status': 200, 'w': 'COMPLETED'}"
+    },
+    {
+     "name": "[J10] 期间推进 202605→202606",
+     "ok": true,
+     "evidence": "202606"
+    },
+    {
+     "name": "[J10] 审计哈希链 chainValid / unchained=0",
+     "ok": true,
+     "evidence": "{'verify': True, 'chainValid': True, 'breakpointId': None, 'checked': 585, 'unchained': 0, 'headHash': 'f0013798aef000577de8c6faac1b88c05f8d53036e89e43f56257821aa53e69a'}"
+    }
+   ]
+  },
+  {
+   "name": "UI 冒烟(壳调)",
+   "passed": 0,
+   "total": 1,
+   "failed": [
+    "[UI] 冒烟(退出码=1)"
+   ],
+   "checks": [
+    {
+     "name": "[UI] 冒烟(退出码=1)",
+     "ok": false,
+     "evidence": "elapsed=41.1s | /11] [msp] › tests\\msp.spec.ts:57:1 › ⑩ 设置: 已结账期间列表(202601/202602)\n  1 failed\n    [msp] › tests\\msp.spec.ts:17:1 › ③ 凭证: 列表加载且含凭证号 ───────────────────────────────────────────────\n  10 passed (38.6s)\n\n"
+    }
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-001-[UI] 冒烟(退出码=1)",
+   "severity": "P2 一般",
+   "title": "[UI] 冒烟(退出码=1)",
+   "evidence": "elapsed=41.1s | /11] [msp] › tests\\msp.spec.ts:57:1 › ⑩ 设置: 已结账期间列表(202601/202602)\n  1 failed\n    [msp] › tests\\msp.spec.ts:17:1 › ③ 凭证: 列表加载且含凭证号 ───────────────────────────────────────────────\n  10 passed (38.6s)\n\n",
+   "suggestion": ""
+  }
+ ]
+}

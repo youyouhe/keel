@@ -38,6 +38,7 @@ def _proj(args) -> "object":
 def _env_api(meta: dict, which: str = "dev", project_root=None):
     from .client import Client
     from .auth import build_auth, AuthError
+    from . import scratch
     url = (meta.get("env") or {}).get(which)
     if not url:
         sys.exit(f"未登记 {which} 环境地址 (project.json env.{which})")
@@ -45,7 +46,11 @@ def _env_api(meta: dict, which: str = "dev", project_root=None):
         auth = build_auth(meta.get("envAuth") or {}, project_root)
     except AuthError as e:
         sys.exit(f"envAuth 配置错误: {e.code} — {e.message}")
-    return Client(url, auth=auth)
+    c = Client(url, auth=auth)
+    # 一次性租户原语(issue #1 方案③): api.create_scratch / api.cleanup_scratch
+    scratch.bind(Client)
+    c._project_root = project_root
+    return c
 
 
 def cmd_guide(a):

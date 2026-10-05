@@ -78,6 +78,30 @@ GUIDE = """# Keel 快速上手(给 agent / 测试工程师)
   `--section` 过滤用子串匹配段名
 - 报工: `run.check(名, bool, 证据)` / `run.diff_zero / conserved / delta_is / all_matched`
 
+## 写路径旅程的环境约定(issue #1 方案③)
+
+写路径旅程(月结/入库/删除类)不应打共享演示环境。Keel 内建一次性租户原语:
+
+```python
+def j12_setup(run):
+    asid = api.create_scratch("m4b")           # 建 keel-m4b-<HHMMSS> 账套(登记)
+    ST["asid"] = asid
+
+def j12_teardown(run):
+    r = api.cleanup_scratch("m4b")             # 尽力清理
+    run.check("[J12] 清理", len(r["deleted"]) > 0 or len(r["pending"]) > 0, r)
+
+# journeys 末尾: api.step("J12", "清理", j12_teardown, critical=False) 建议非 critical
+```
+
+语义:
+- `create_scratch(prefix)` → 建 `keel-<prefix>-<HHMMSS>` 账套, 返回 appasid, 自动登记到
+  项目空间 `scratch-registry.json`
+- `cleanup_scratch(prefix)` → 尽力焚毁: 被测系统有 DELETE 端点则删;
+  无端点(如妙算盘当前)则标 pending——**待被测系统补 DELETE /account-sets 后可批量焚**
+- `api.list_scratch()` → 查看登记(含 pending), 供演示环境定期人工清扫 keel-* 账套
+- 生命周期建议: setup 步建(critical=True, 建不出即中止), teardown 步清(critical=False)
+
 ## 常见坑
 - **信任边界(必读)**: `keel_file_put` 可写 `tests/journeys.py`——而 journeys.py 会被
   Keel 动态 import 执行。因此 Bearer token 持有者 = 可在 Keel 服务器上执行任意代码。

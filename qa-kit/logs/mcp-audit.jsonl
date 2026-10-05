@@ -140,3 +140,10 @@
 {"time": "2026-10-05 19:19:55", "tool": "keel_file_put", "args": {"project": "miaosuanpan", "path": "test-version.json", "content": "{\"a\":2}", "expected_version": 1}, "ok": true}
 {"time": "2026-10-05 19:19:55", "tool": "keel_file_put", "args": {"project": "miaosuanpan", "path": "test-version.json", "content": "{\"a\":3}", "expected_version": 0}, "ok": false}
 {"time": "2026-10-05 19:21:13", "tool": "keel_contract_verify", "args": {"project": "miaosuanpan", "context_path": "tests/ctx-20261005.json"}, "ok": true}
+{"time": "2026-10-05 19:24:13", "tool": "keel_contract_verify", "args": {"context_path": "tests/ctx-20261005.json", "project": "miaosuanpan", "scope": "confirmed"}, "ok": true}
+{"time": "2026-10-05 19:24:26", "tool": "keel_file_put", "args": {"content": "{\"probe\": 1}\n", "path": "tests/lock-probe.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:24:32", "tool": "keel_file_get", "args": {"path": "tests/lock-probe.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:24:42", "tool": "keel_file_put", "args": {"content": "{\"probe\": 2}\n", "expected_version": 1, "path": "tests/lock-probe.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:24:48", "tool": "keel_file_put", "args": {"content": "{\"probe\": 3}\n", "expected_version": 1, "path": "tests/lock-probe.json", "project": "miaosuanpan"}, "ok": false}
+{"time": "2026-10-05 19:24:59", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan", "section": "J10 月结工作流全链(P2)"}, "ok": true}
+{"time": "2026-10-05 19:26:11", "tool": "keel_issue_sync", "args": {"dry_run": true, "project": "miaosuanpan"}, "ok": true}
