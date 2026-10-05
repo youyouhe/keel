@@ -93,3 +93,50 @@
 {"time": "2026-10-04 03:02:39", "tool": "keel_issue_sync", "args": {"project": "miaosuanpan"}, "ok": true}
 {"time": "2026-10-04 10:34:18", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
 {"time": "2026-10-04 10:34:18", "tool": "keel_status_get", "args": {"project": "crm"}, "ok": true}
+{"time": "2026-10-04 11:13:47", "tool": "keel_journey_run", "args": {"project": "crm"}, "ok": true}
+{"time": "2026-10-04 11:14:24", "tool": "keel_status_get", "args": {"project": "crm"}, "ok": true}
+{"time": "2026-10-04 11:23:43", "tool": "keel_file_get", "args": {"path": "contracts/invariants.json", "project": "crm"}, "ok": true}
+{"time": "2026-10-04 11:56:37", "tool": "keel_project_create", "args": {"env_dev": "http://192.168.8.181:8901", "issue_repo": "wangjiansudi-hash/hr-recruiting", "project": "hr-recruiting"}, "ok": true}
+{"time": "2026-10-04 11:56:46", "tool": "keel_file_put", "args": {"project": "hr-recruiting", "path": "contracts/invariants.json", "content": "{\n  \"_说明\": \"hr-recruiting Phase 1 · Keel 结构化契约(2026-10-04 提案版,AI 主笔待测试组签收;与 crm 同构:journey 锚点绑定 docs/qa/20261004/keel/hr-journeys.py 同名 run.check,probe 由 contract runner 在 env_dev 独立执行)。left 语法:journe..."}, "ok": true}
+{"time": "2026-10-04 11:56:46", "tool": "keel_file_put", "args": {"project": "hr-recruiting", "path": "tests/journeys.py", "content": "# -*- coding: utf-8 -*-\n\"\"\"hr-recruiting Phase 1 · Keel 穿行旅程(2026-10-04 提案版)\n\n落点:Keel 项目空间 tests/journeys.py(本文件可直接 cp 覆盖)。\n契约:同目录 hr-invariants.json(结构化不变量,42 条:confirmed 40 / draft 2),\n  根文档《HR-契约不变..."}, "ok": true}
+{"time": "2026-10-04 11:56:56", "tool": "keel_project_config", "args": {"envAuth": {"accounts": {"13800000001": {"password": "demo123", "username": "13800000001"}, "13800000002": {"password": "demo123", "username": "13800000002"}, "13800000003": {"password": "demo123", "username": "13800000003"}, "13800000004": {"password": "demo123", "username": "13800000004"}, "13800000005": {"password": "demo123", "username": "13800000005"}, "13800000006": {"password": "demo123", "username": "13800000006"}}, "loginBody": {"password": "{password}", "phone": "{username}"}, "path": "/api/v1/auth/login", "roleField": "roleCode", "tokenField": "token", "type": "credentials"}, "project": "hr-recruiting"}, "ok": true}
+{"time": "2026-10-04 11:57:03", "tool": "keel_journey_run", "args": {"project": "hr-recruiting"}, "ok": true}
+{"time": "2026-10-04 11:57:25", "tool": "keel_status_get", "args": {"project": "hr-recruiting"}, "ok": true}
+{"time": "2026-10-04 11:57:27", "tool": "keel_issue_sync", "args": {"project": "hr-recruiting"}, "ok": true}
+{"time": "2026-10-04 23:42:51", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-04 23:43:00", "tool": "keel_file_get", "args": {"project": "miaosuanpan", "path": "contracts/invariants.json"}, "ok": true}
+{"time": "2026-10-05 18:18:55", "tool": "keel_project_create", "args": {"env_dev": "http://localhost:8811", "project": "miaosuanpan"}, "ok": false}
+{"time": "2026-10-05 18:19:08", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:19:08", "tool": "keel_file_get", "args": {"path": "project.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:20:00", "tool": "keel_file_get", "args": {"path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:21:27", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:24:54", "tool": "keel_file_get", "args": {"path": "contracts/invariants.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:27:02", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\n每轮自建独立账套验证 M4b 蒸馏契约与 P2 状态化长工作流,不污染种子账套 as_001/2/3。\"\"\"\nfrom keel import Journey, Step\n\nA = {\"appasid\": \"a...", "create_dirs": true, "expected_version": 0, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:28:07", "tool": "keel_file_put", "args": {"content": "[\n {\"id\":\"INV-TB-INITIAL\",\"rule\":\"试算平衡·期初差额=0\",\"evidence\":\"EPF J4-3 每轮终态\",\"version\":1,\"status\":\"confirmed\",\"check\":{\"left\":{\"path\":\"tb202603.initialDiff\"},\"op\":\"==\",\"right\":0}},\n {\"id\":\"INV-TB-CLOSING...", "expected_version": 0, "path": "contracts/invariants.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:28:10", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan", "section": "J10"}, "ok": true}
+{"time": "2026-10-05 18:28:44", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan", "section": "J10 月结工作流全链(P2)"}, "ok": true}
+{"time": "2026-10-05 18:29:19", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:30:58", "tool": "keel_file_get", "args": {"path": "reports/report-20261005-182943.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:38:06", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\nJ10/J11 以 as_003 为靶子(每轮推进其期间,可反复跑),J12 每轮自建独立账套验证\nM4b 蒸馏契约。口径备注:费用凭证走应付计提(不动 1001/1002,保资金账实核对);\n每个新期间先折旧...", "create_dirs": true, "expected_version": 1, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": false}
+{"time": "2026-10-05 18:38:22", "tool": "keel_file_get", "args": {"path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:39:44", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\nJ10/J11 以 as_003 为靶子(每轮推进其期间,可反复跑),J12 每轮自建独立账套验证\nM4b 蒸馏契约。口径备注:费用凭证走应付计提(不动 1001/1002,保资金账实核对);\n每个新期间先折旧...", "create_dirs": true, "expected_version": 0, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:39:49", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:40:20", "tool": "keel_file_put", "args": {"content": "{\"tb202603\": {\"initialDebit\": 1352791.4, \"initialCredit\": 1352791.4, \"closingDebit\": 1386548.8, \"closingCredit\": 1386548.8, \"balanced\": true, \"initialDiff\": 0, \"closingDiff\": 0}, \"inv\": {\"period\": \"20...", "create_dirs": true, "path": "tests/ctx-20261005.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:40:43", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:41:00", "tool": "keel_file_get", "args": {"path": "reports/report-20261005-184013.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:42:16", "tool": "keel_file_get", "args": {"path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:43:48", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\nJ10/J11 以 as_003 为靶子(每轮推进其期间,可反复跑),J12 每轮自建独立账套验证\nM4b 蒸馏契约。口径备注:费用凭证走应付计提(不动 1001/1002,保资金账实核对);\n每个新期间先折旧...", "create_dirs": true, "expected_version": 0, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:43:53", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 18:44:47", "tool": "keel_file_get", "args": {"path": "reports/report-20261005-184416.json", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:00:25", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\nJ10/J11 以 as_001 为靶子(用户拍板;每轮推进其当前期间,可反复跑),J12 每轮自建\n独立账套验证 M4b 蒸馏契约。口径备注:费用凭证走应付计提(不动 1001/1002,保资金\n账实核对);...", "create_dirs": true, "expected_version": 1, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": false}
+{"time": "2026-10-05 19:01:44", "tool": "keel_file_put", "args": {"content": "\"\"\"miaosuanpan 领域旅程 — 认证由 envAuth 自动装配。\nJ0/J7/J9 只读安全集(沿用,断言改鲁棒);J10-J12 为 2026-10-05 新增写路径旅程:\nJ10/J11 以 as_001 为靶子(用户拍板;每轮推进其当前期间,可反复跑),J12 每轮自建\n独立账套验证 M4b 蒸馏契约。口径备注:费用凭证走应付计提(不动 1001/1002,保资金\n账实核对);...", "create_dirs": true, "expected_version": 0, "path": "tests/journeys.py", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:01:48", "tool": "keel_journey_run", "args": {"env": "dev", "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:03:23", "tool": "keel_status_get", "args": {"project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:09:57", "tool": "keel_issue_sync", "args": {"dry_run": true, "project": "miaosuanpan"}, "ok": true}
+{"time": "2026-10-05 19:19:15", "tool": "keel_contract_verify", "args": {"project": "miaosuanpan", "context_path": "tests/ctx-20261005.json"}, "ok": true}
+{"time": "2026-10-05 19:19:29", "tool": "keel_contract_verify", "args": {"project": "miaosuanpan", "context_path": "tests/ctx-20261005.json"}, "ok": true}
+{"time": "2026-10-05 19:19:55", "tool": "keel_file_put", "args": {"project": "miaosuanpan", "path": "test-version.json", "content": "{\"a\":1}"}, "ok": true}
+{"time": "2026-10-05 19:19:55", "tool": "keel_file_get", "args": {"project": "miaosuanpan", "path": "test-version.json"}, "ok": true}
+{"time": "2026-10-05 19:19:55", "tool": "keel_file_put", "args": {"project": "miaosuanpan", "path": "test-version.json", "content": "{\"a\":2}", "expected_version": 1}, "ok": true}
+{"time": "2026-10-05 19:19:55", "tool": "keel_file_put", "args": {"project": "miaosuanpan", "path": "test-version.json", "content": "{\"a\":3}", "expected_version": 0}, "ok": false}
+{"time": "2026-10-05 19:21:13", "tool": "keel_contract_verify", "args": {"project": "miaosuanpan", "context_path": "tests/ctx-20261005.json"}, "ok": true}

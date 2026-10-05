@@ -1,0 +1,388 @@
+{
+ "title": "hr-recruiting · 旅程回归",
+ "date": "2026-10-04",
+ "conclusion": "全绿",
+ "stats": {
+  "passed": 59,
+  "total": 59,
+  "failed": 0
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J0-冒烟模板列表200",
+     "ok": true,
+     "evidence": "GET /api/v1/job-templates → 200"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 7,
+   "total": 7,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J1-建档201含POS编号",
+     "ok": true,
+     "evidence": "POST /api/v1/job-templates → 201, jobCode=POS-20261004-0004"
+    },
+    {
+     "name": "J1-必填与枚举校验400",
+     "ok": true,
+     "evidence": "缺职责→400; 职责<20字→400; 非法招聘类型→400"
+    },
+    {
+     "name": "J1-反歧视阻断400",
+     "ok": true,
+     "evidence": "任职条件含「限男性」→ 400, code=DISCRIMINATORY_WORD"
+    },
+    {
+     "name": "J1-同启用名重复409",
+     "ok": true,
+     "evidence": "同启用名再建 → 409, code=JOB_NAME_EXISTS"
+    },
+    {
+     "name": "J1-R03无建档权限403",
+     "ok": true,
+     "evidence": "R03 建档 → 403"
+    },
+    {
+     "name": "J1-薪酬按角色脱敏",
+     "ok": true,
+     "evidence": "R03 salaryRange=None/hidden=True; R02 salaryRange=20-30K"
+    },
+    {
+     "name": "J1-编辑留痕change-logs",
+     "ok": true,
+     "evidence": "PUT → 200; change-logs job_name 记录存在=True"
+    }
+   ]
+  },
+  {
+   "name": "J2 档案域",
+   "passed": 7,
+   "total": 7,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J2-提报201待审核",
+     "ok": true,
+     "evidence": "POST /api/v1/hiring-requests → 201, requestNo=REQ-20261004-0006"
+    },
+    {
+     "name": "J2-模板快照带出",
+     "ok": true,
+     "evidence": "status=待审核, line jobName=KEEL岗位主086224改(模板名)"
+    },
+    {
+     "name": "J2-岗位分离(自审403·无权限403)",
+     "ok": true,
+     "evidence": "R02 审本人代提 → 403; R01 审(无 hiring:audit)→ 403"
+    },
+    {
+     "name": "J2-拒绝原因校验转已拒绝",
+     "ok": true,
+     "evidence": "4字原因 → 400; 合规拒绝 → 已拒绝"
+    },
+    {
+     "name": "J2-修改重提回待审核",
+     "ok": true,
+     "evidence": "PUT 重提 → status=待审核"
+    },
+    {
+     "name": "J2-通过转在招生成OP",
+     "ok": true,
+     "evidence": "REQ-A → 已转在招, OP-20261004-0006; REQ-B → 已转在招, OP-20261004-0007"
+    },
+    {
+     "name": "J2-R01列表仅本人",
+     "ok": true,
+     "evidence": "R01 列表含本人 REQ-A=True, 含 R02 代提 REQ-B=False"
+    }
+   ]
+  },
+  {
+   "name": "J3 业务单据循环",
+   "passed": 5,
+   "total": 5,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J3-状态字段只读400",
+     "ok": true,
+     "evidence": "PUT positionStatus → 400, code=STATUS_IMMUTABLE"
+    },
+    {
+     "name": "J3-维护校验400",
+     "ok": true,
+     "evidence": "headcount=0 → 400; 关闭原因4字(R02)→ 400"
+    },
+    {
+     "name": "J3-关闭200留痕",
+     "ok": true,
+     "evidence": "关闭 → 200; 详情=已关闭; 留痕 isAuto=False"
+    },
+    {
+     "name": "J3-同状态409",
+     "ok": true,
+     "evidence": "重复关闭 → 409, code=STATUS_UNCHANGED"
+    },
+    {
+     "name": "J3-重开200回招聘中",
+     "ok": true,
+     "evidence": "重开 → 200/招聘中; 复关 → 200/已关闭(终态已关闭,供 J4 拒投断言)"
+    }
+   ]
+  },
+  {
+   "name": "J4 周期关账",
+   "passed": 11,
+   "total": 11,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J4-岗位关闭拒收",
+     "ok": true,
+     "evidence": "向已关闭岗位投递 → 400"
+    },
+    {
+     "name": "J4-同意闸门400",
+     "ok": true,
+     "evidence": "缺处理同意 → 400/CONSENT_REQUIRED; 缺留存同意 → 400"
+    },
+    {
+     "name": "J4-登记201含APP编号",
+     "ok": true,
+     "evidence": "POST /api/v1/applications → 201, applyNo=APP-20261004-0018, 初态=待初筛"
+    },
+    {
+     "name": "J4-渠道条件必填400",
+     "ok": true,
+     "evidence": "招聘网站未选站 → 400; 内推无效工号 → 400; 人才库渠道(Phase 2)→ 400"
+    },
+    {
+     "name": "J4-列表服务端脱敏",
+     "ok": true,
+     "evidence": "phone=139****0001, idCardMasked=110***********7852, 明文未下发=True"
+    },
+    {
+     "name": "J4-R04仅见已转面试",
+     "ok": true,
+     "evidence": "R04 列表含未转面试的 A=False"
+    },
+    {
+     "name": "J4-淘汰原因与反歧视",
+     "ok": true,
+     "evidence": "4字原因 → 400; 歧视表述 → 400; 合规淘汰 → 已淘汰"
+    },
+    {
+     "name": "J4-转面试须对接人",
+     "ok": true,
+     "evidence": "无对接人 → 400; 带 R01 对接人 → 已转面试"
+    },
+    {
+     "name": "J4-初筛关闭409",
+     "ok": true,
+     "evidence": "已转面试再初筛 → 409, code=SCREENING_CLOSED"
+    },
+    {
+     "name": "J4-R04无初筛权限403",
+     "ok": true,
+     "evidence": "R04 初筛 → 403"
+    },
+    {
+     "name": "J4-继续沟通转初筛中",
+     "ok": true,
+     "evidence": "B 初筛 → 初筛中"
+    }
+   ]
+  },
+  {
+   "name": "J5 季度/年度汇总",
+   "passed": 5,
+   "total": 5,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J5-敏感查看明文与留痕",
+     "ok": true,
+     "evidence": "R05 sensitive-view → 200, idCard 还原=True, 访问日志条数=1"
+    },
+    {
+     "name": "J5-非R05与理由校验",
+     "ok": true,
+     "evidence": "R02 敏感查看 → 403; 理由2字 → 400"
+    },
+    {
+     "name": "J5-授权超12月400",
+     "ok": true,
+     "evidence": "今天+400 天 → 400, message=授权有效期不可超过 12 个月(最迟 2027-10-04)"
+    },
+    {
+     "name": "J5-初筛未结束409",
+     "ok": true,
+     "evidence": "B(初筛中)授权 → 409, code=SCREENING_NOT_CLOSED"
+    },
+    {
+     "name": "J5-授权成功与撤回",
+     "ok": true,
+     "evidence": "授权(+90天) → 201; 重复 → 409; 撤回 → 200; 再撤回 → 404"
+    }
+   ]
+  },
+  {
+   "name": "J6 跨期承接",
+   "passed": 8,
+   "total": 8,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J6-仅初筛通过可邀约409",
+     "ok": true,
+     "evidence": "B(初筛中)邀约 → 409, code=NOT_SCREENED_IN"
+    },
+    {
+     "name": "J6-邀约条件校验400",
+     "ok": true,
+     "evidence": "offer流程 → 400; 缺时间 → 400; 过去时间 → 400; 面试官=R03 → 400"
+    },
+    {
+     "name": "J6-已安排201含ITV编号",
+     "ok": true,
+     "evidence": "POST /api/v1/interviews → 201, no=ITV-20261004-0014, status=已安排"
+    },
+    {
+     "name": "J6-进行中唯一409",
+     "ok": true,
+     "evidence": "重复邀约 → 409, code=INTERVIEW_EXISTS"
+    },
+    {
+     "name": "J6-开始面试",
+     "ok": true,
+     "evidence": "start → 面试中; 再 start → 409"
+    },
+    {
+     "name": "J6-结果仅本人403",
+     "ok": true,
+     "evidence": "R01(有权限点,非本人)→ 403"
+    },
+    {
+     "name": "J6-评语校验与锁定409",
+     "ok": true,
+     "evidence": "评语8字 → 400; 提交 → 已完成; 重复 → 409/RESULT_LOCKED"
+    },
+    {
+     "name": "J6-R05撤销重填",
+     "ok": true,
+     "evidence": "revoke → 面试中; 重填 → 已完成"
+    }
+   ]
+  },
+  {
+   "name": "J7 报表勾稽",
+   "passed": 7,
+   "total": 7,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J7-岗位分离与前置403/409",
+     "ok": true,
+     "evidence": "对「暂不考虑」决策 → 409/NOT_INTERVIEW_PASSED; 决策人=面试官(R05)→ 403"
+    },
+    {
+     "name": "J7-录用必填与offer已发",
+     "ok": true,
+     "evidence": "缺定薪 → 400; 决策 → offer已发; 重复决策 → 409"
+    },
+    {
+     "name": "J7-accept回写未满员",
+     "ok": true,
+     "evidence": "accept → hired=1, closed=False; 重复 accept → 409; 岗位仍 招聘中"
+    },
+    {
+     "name": "J7-招满自动关闭is_auto",
+     "ok": true,
+     "evidence": "accept#2 → hired=2, closed=True; 岗位=已关闭; 留痕 isAuto=True, 操作人=系统"
+    },
+    {
+     "name": "J7-拒绝offer不加人数",
+     "ok": true,
+     "evidence": "reject-offer → 已结束; hiredCount 仍=2"
+    },
+    {
+     "name": "J7-已关岗位accept409",
+     "ok": true,
+     "evidence": "岗位已关闭再 accept → 409, code=POSITION_CLOSED"
+    },
+    {
+     "name": "J7-有关联候选人名称冻结409",
+     "ok": true,
+     "evidence": "PUT jobName → 409, code=JOB_NAME_FROZEN"
+    }
+   ]
+  },
+  {
+   "name": "J8 次期初始化",
+   "passed": 4,
+   "total": 4,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J8-台账权限与留痕",
+     "ok": true,
+     "evidence": "R05 台账 → 200, A 的台账存在=True; R03 → 403"
+    },
+    {
+     "name": "J8-访问日志可查",
+     "ok": true,
+     "evidence": "R06 access-logs → 200, 条数=1"
+    },
+    {
+     "name": "J8-删除权匿名化不可逆",
+     "ok": true,
+     "evidence": "未核验 → 400; 登记 → 201; 理由4字 → 400; handle → 匿名化 APP-20261004-0020; 详情 name=候选人 20, phone='', idCardMasked=None; 台账 status=已匿名化"
+    },
+    {
+     "name": "J8-留存清理冒烟",
+     "ok": true,
+     "evidence": "R03 触发清理 → 403; R05 → 200, swept=0"
+    }
+   ]
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 4,
+   "total": 4,
+   "failed": [],
+   "checks": [
+    {
+     "name": "J9-定薪仅R05",
+     "ok": true,
+     "evidence": "R02 offerSalary=None; R05 offerSalary='25K'"
+    },
+    {
+     "name": "J9-评语受限标记",
+     "ok": true,
+     "evidence": "R03 note=None, restricted=True; R04(面试官)note 非空=True"
+    },
+    {
+     "name": "J9-R04仅本人场次",
+     "ok": true,
+     "evidence": "R04 列表 4 条, interviewerId 全为本人=True"
+    },
+    {
+     "name": "J9-矩阵抽样403",
+     "ok": true,
+     "evidence": "R03 台账 → 403; R06 应聘登记 → 403(R06 无 application:write)"
+    }
+   ]
+  }
+ ],
+ "findings": []
+}

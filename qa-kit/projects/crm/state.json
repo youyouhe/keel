@@ -1,13 +1,13 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-04 11:10:05",
+  "time": "2026-10-04 11:13:49",
   "journey": "crm 穿行",
   "ok": true,
   "passed": 56,
   "total": 56,
   "abortedAt": null,
-  "report": "projects\\crm\\reports\\report-20261004-111005.json"
+  "report": "projects\\crm\\reports\\report-20261004-111349.json"
  },
  "contractVersion": 0,
  "runs": [
@@ -115,6 +115,12 @@
   },
   {
    "time": "2026-10-04 11:10:05",
+   "ok": true,
+   "passed": 56,
+   "total": 56
+  },
+  {
+   "time": "2026-10-04 11:13:49",
    "ok": true,
    "passed": 56,
    "total": 56

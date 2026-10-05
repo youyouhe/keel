@@ -86,7 +86,18 @@ def cmd_contract_verify(a):
     from .invariants import InvariantSet
     p = _proj(a)
     inv = InvariantSet.load(p.root / "contracts" / "invariants.json")
-    ctx = json.loads(Path(a.context).read_text(encoding="utf-8"))
+    # context 路径: 绝对路径原样; 相对路径先按项目空间解析, 再退回 CWD
+    cp = Path(a.context)
+    if not cp.is_absolute():
+        cand = p.root / cp
+        cp = cand if cand.exists() else cp
+    if not cp.exists():
+        sys.exit(f"context 文件不存在: {a.context} (已尝试 {cp}); "
+                 f"提示: 相对路径按项目空间 projects/<A>/ 解析")
+    try:
+        ctx = json.loads(cp.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        sys.exit(f"context 非合法 JSON: {cp} — {e}")
     run = inv.verify(ctx, only=a.scope)
     print(f"契约状态: {inv.stats()}")
     print(run.summary())
@@ -114,14 +125,19 @@ def cmd_journey_run(a):
         all_runs.append(ui_run)
         # UI 失败影响 journey 整体判定(除非 ui.gating=false)
         ui_gating = (p.meta.get("ui") or {}).get("gating", True)
-        if ui_gating and ui_run.failed:
-            result.aborted_at = result.aborted_at or f"UI冒烟/{ui_run.failed[0].name}"
+        # 反馈⑥: UI 与 API 分项计分 — UI 失败不再覆盖 API 结论(中止标记),
+        # 默认 gating=false; 设 true 才让 UI 失败拉低整体绿
+        if ui_gating and ui_run.failed and result.ok:
+            pass  # UI 失败记入 findings(下方自动收集), 不改写 API 结论
     # 汇总为报告落盘
-    report = Report(f"{p.meta['name']} · 旅程回归", conclusion=(
-        "全绿" if result.ok and all(not r.failed for r in all_runs)
-        else f"存在失败/中止@{result.aborted_at}"), runs=all_runs,
-        findings=[Finding(f"F-{c.name[:40]}", Severity.P2, c.name, str(c.evidence), "")
-                  for r in result.runs for c in r.failed])
+    all_failed = [c for r in all_runs for c in r.failed]
+    findings = [Finding(f"F-{i:03d}-{c.name}", Severity.P2, c.name, str(c.evidence), "")
+                for i, c in enumerate(all_failed, 1)]
+    all_green = result.ok and all(not r.failed for r in all_runs)
+    report = Report(f"{p.meta['name']} · 旅程回归",
+                    conclusion=("全绿" if all_green
+                                else f"存在失败/中止@{result.aborted_at}"),
+                    runs=all_runs, findings=findings)
     ts = time.strftime("%Y%m%d-%H%M%S")
     jp = p.root / "reports" / f"report-{ts}.json"
     report.to_json(str(jp))

@@ -1,0 +1,21 @@
+{
+ "baseline": null,
+ "lastRun": {
+  "time": "2026-10-04 11:57:07",
+  "journey": "hr-recruiting 穿行",
+  "ok": true,
+  "passed": 59,
+  "total": 59,
+  "abortedAt": null,
+  "report": "projects\\hr-recruiting\\reports\\report-20261004-115707.json"
+ },
+ "contractVersion": 0,
+ "runs": [
+  {
+   "time": "2026-10-04 11:57:07",
+   "ok": true,
+   "passed": 59,
+   "total": 59
+  }
+ ]
+}

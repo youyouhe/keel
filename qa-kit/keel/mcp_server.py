@@ -249,13 +249,24 @@ def call_tool(name: str, args: dict, root: str = "projects") -> dict:
         args = {k: v for k, v in args.items() if k != "repo"}
     buf = io.StringIO()
     code = 0
+    err_text = None
     with _gate:
         try:
             with contextlib.redirect_stdout(buf):
                 cli_main(["--root", root, *_ARGV[name](args)])
         except SystemExit as e:
             code = e.code or 0
+        except Exception as e:
+            # 反馈①: contract_verify 内部异常未被捕获 → 连接被切(ECONNRESET)。
+            # 服务端绝不因单次工具调用崩溃。
+            import traceback
+            code = 1
+            err_text = f"{type(e).__name__}: {e}"
+            buf.write(f"[internal error] {err_text}\n{traceback.format_exc()[-800:]}")
     out = {"ok": code == 0, "exitCode": code, "output": buf.getvalue().strip()}
+    if err_text:
+        out["error"] = "INTERNAL_ERROR"
+        out["message"] = err_text
     audit(name, args, out["ok"], root)
     return out
 

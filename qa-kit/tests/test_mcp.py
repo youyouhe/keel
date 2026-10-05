@@ -167,7 +167,7 @@ class TestFileOps(unittest.TestCase):
         self.assertTrue(r["ok"])
         g = file_get(self.root, "fo", "tests/journeys.py")
         self.assertIn("test", g["content"])
-        self.assertEqual(g["version"], 0)  # 非 JSON 无版本号
+        self.assertEqual(g["version"], 1)  # sidecar 版本持久递增(反馈②修复)
 
     def test_F2_path_escape_rejected(self):
         from keel.fileops import file_put, FileOpError
@@ -196,9 +196,10 @@ class TestFileOps(unittest.TestCase):
         with self.assertRaises(FileOpError) as ctx:
             file_put(self.root, "fo", "lock.json", '{"v": 2}', expected_version=99)
         self.assertEqual(ctx.exception.code, "VERSION_CONFLICT")
-        # 正确版本号
-        r = file_put(self.root, "fo", "lock.json", '{"v": 2}', expected_version=0)
+        # 正确版本号(首次写入后版本=1)
+        r = file_put(self.root, "fo", "lock.json", '{"v": 2}', expected_version=1)
         self.assertTrue(r["ok"])
+        self.assertEqual(r["version"], 2)  # 递增
 
     def test_F6_project_not_found(self):
         from keel.fileops import file_put, FileOpError

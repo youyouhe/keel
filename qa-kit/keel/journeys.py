@@ -62,10 +62,13 @@ class Journey:
         self._sections: list[tuple[str, list[Step]]] = []
 
     def register(self, section: str, steps: list[Step]) -> None:
-        """注册段; 段名自由(SKELETON 为参考骨架, 前缀匹配归入语义段)。"""
-        # 尝试将自定义段名归入最近的骨架段(前缀匹配)
-        matched = next((s for s in SKELETON if section.startswith(s[:2])), section)
-        self._sections.append((matched, steps))
+        """注册段; 段名保留原样(反馈③: 自定义段名不再被骨架名覆盖,
+        --section 过滤与报告展示均用原始名; SKELETON 仅为参考)。
+        连续同名段自动合并( JourneyBuilder.step 每步一注册)。"""
+        if self._sections and self._sections[-1][0] == section:
+            self._sections[-1][1].extend(steps)
+        else:
+            self._sections.append((section, steps))
 
     def run(self) -> JourneyResult:
         result = JourneyResult(self.name)

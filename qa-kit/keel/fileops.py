@@ -49,7 +49,7 @@ def file_put(root: str, project: str, path: str, content: str,
     from .project import KeelProject
     if not KeelProject.valid_name(project):
         raise FileOpError("PROJECT_NOT_FOUND", f"非法项目名 {project!r}")
-    proj = Path(root) / project
+    proj = (Path(root) / project).resolve()
     if not proj.exists():
         raise FileOpError("PROJECT_NOT_FOUND", f"项目不存在: {project}")
     target = _resolve(proj, path, "put")
@@ -67,19 +67,27 @@ def file_put(root: str, project: str, path: str, content: str,
     if len(data) > MAX_FILE:
         raise FileOpError("FILE_TOO_LARGE", f"{len(data)} 字节超 {MAX_FILE} 上限")
 
-    # 乐观锁
-    version = 0
-    if target.exists():
+    # 乐观锁: 版本存独立 sidecar(.keel-versions.json), 不污染被测文件内容
+    # (反馈②: 原实现从文件内容读 _version, 写入不回写 → 永远 0, 乐观锁失灵)
+    vfile = proj / ".keel-versions.json"
+    versions = {}
+    if vfile.exists():
         try:
-            version = json.loads(target.read_text(encoding="utf-8")).get("_version", 0)
+            versions = json.loads(vfile.read_text(encoding="utf-8"))
         except Exception:
-            version = 0
+            versions = {}
+    vkey = target.relative_to(proj).as_posix()
+    version = versions.get(vkey, 0)
     if expected_version is not None and version != expected_version:
         raise FileOpError("VERSION_CONFLICT", f"期望 v{expected_version} 实际 v{version}")
 
     if create_dirs:
         target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
+
+    # 版本号递增并持久化
+    versions[vkey] = version + 1
+    vfile.write_text(json.dumps(versions, ensure_ascii=False, indent=1), encoding="utf-8")
 
     # S6 审计
     log_dir = Path(root).parent / "logs"
@@ -96,7 +104,7 @@ def file_get(root: str, project: str, path: str) -> dict:
     from .project import KeelProject
     if not KeelProject.valid_name(project):
         raise FileOpError("PROJECT_NOT_FOUND", f"非法项目名 {project!r}")
-    proj = Path(root) / project
+    proj = (Path(root) / project).resolve()
     if not proj.exists():
         raise FileOpError("PROJECT_NOT_FOUND", f"项目不存在: {project}")
     target = _resolve(proj, path, "get")
@@ -105,11 +113,15 @@ def file_get(root: str, project: str, path: str) -> dict:
     stat = target.stat()
     content = target.read_text(encoding="utf-8", errors="replace")
     truncated = len(content) > GET_RETURN_LIMIT
+    # 版本号从 sidecar 读(与 file_put 同源)
+    vfile = proj / ".keel-versions.json"
     version = 0
-    try:
-        version = json.loads(content).get("_version", 0)
-    except Exception:
-        pass
+    if vfile.exists():
+        try:
+            versions = json.loads(vfile.read_text(encoding="utf-8"))
+            version = versions.get(target.relative_to(proj).as_posix(), 0)
+        except Exception:
+            version = 0
     return {"path": path, "content": content[:GET_RETURN_LIMIT],
             "truncated": truncated, "size": stat.st_size,
             "mtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stat.st_mtime)),

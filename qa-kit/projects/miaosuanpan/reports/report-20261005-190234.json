@@ -1,0 +1,276 @@
+{
+ "title": "miaosuanpan · 旅程回归",
+ "date": "2026-10-05",
+ "conclusion": "存在失败/中止@UI冒烟/[UI] 冒烟(退出码=1)",
+ "stats": {
+  "passed": 40,
+  "total": 41,
+  "failed": 1
+ },
+ "runs": [
+  {
+   "name": "J0 越权与多租户",
+   "passed": 4,
+   "total": 4,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J0] demo-login + 种子账套三件套在",
+     "ok": true,
+     "evidence": "{'status': 200, 'n': 3}"
+    },
+    {
+     "name": "[J0] as_999 → 403/404",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 无权访问该账套"
+    },
+    {
+     "name": "[J0] 缺省 appasid → 拒",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 无权访问该账套"
+    },
+    {
+     "name": "[J0] R04 越权写 → 403",
+     "ok": true,
+     "evidence": "403 FORBIDDEN 角色 R04 无权限点 voucher:write"
+    }
+   ]
+  },
+  {
+   "name": "J7 报表勾稽",
+   "passed": 3,
+   "total": 3,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J7] 试算三层平衡",
+     "ok": true,
+     "evidence": "{'initialDiff': 0, 'closingDiff': 0, 'balanced': True}"
+    },
+    {
+     "name": "[J7] 存货对账 allMatched",
+     "ok": true,
+     "evidence": ""
+    },
+    {
+     "name": "[J7] 资金勾稽双行 matched",
+     "ok": true,
+     "evidence": "[]"
+    }
+   ]
+  },
+  {
+   "name": "J9 审计穿透",
+   "passed": 1,
+   "total": 1,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[平台] MCP 工具面:P2 四工具在册且总数不缩",
+     "ok": true,
+     "evidence": "n=47"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 10,
+   "total": 10,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J10] · 靶期=当前期间",
+     "ok": true,
+     "evidence": "202603"
+    },
+    {
+     "name": "[J10] · 折旧计提(当期已提 409 亦过)",
+     "ok": true,
+     "evidence": "{'status': 409}"
+    },
+    {
+     "name": "[J10] · 制单两张 201(收入+费用计提,不动资金科目)",
+     "ok": true,
+     "evidence": "[201, 201]"
+    },
+    {
+     "name": "[J10] · 交叉审核完成(R05/R02 双通道,零未审)",
+     "ok": true,
+     "evidence": "{'remain': 0}"
+    },
+    {
+     "name": "[J10] 发起 month_close:RUNNING + 4 步册",
+     "ok": true,
+     "evidence": "{'status': 201, 'w': 'RUNNING'}"
+    },
+    {
+     "name": "[J10] advance → L2 结转门挂起(preflight 自动过)",
+     "ok": true,
+     "evidence": "{'w': 'WAITING_HUMAN', 'cur': 'carry_forward'}"
+    },
+    {
+     "name": "[J10] 批准结转 → verify 过 → L3 结账门",
+     "ok": true,
+     "evidence": "{'w': 'WAITING_HUMAN', 'steps': {'preflight': 'DONE', 'carry_forward': 'DONE', 'verify': 'DONE', 'close': 'WAITING_HUMAN'}, 'http': 200}"
+    },
+    {
+     "name": "[J10] 批准结账 → COMPLETED",
+     "ok": true,
+     "evidence": "{'status': 200, 'w': 'COMPLETED'}"
+    },
+    {
+     "name": "[J10] 期间推进 202603→202604",
+     "ok": true,
+     "evidence": "202604"
+    },
+    {
+     "name": "[J10] 审计哈希链 chainValid / unchained=0",
+     "ok": true,
+     "evidence": "{'verify': True, 'chainValid': True, 'breakpointId': None, 'checked': 547, 'unchained': 0, 'headHash': 'ac87f6fb766f6a308cc9e3d416e06b0b6b424fd05b4b17d2c34f30c2b5daefb3'}"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 13,
+   "total": 13,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J11] · 靶期=当前期间",
+     "ok": true,
+     "evidence": "202604"
+    },
+    {
+     "name": "[J11] · 折旧计提(当期已提 409 亦过)",
+     "ok": true,
+     "evidence": "{'status': 201}"
+    },
+    {
+     "name": "[J11] · 制单两张 201(收入+费用计提,不动资金科目)",
+     "ok": true,
+     "evidence": "[201, 201]"
+    },
+    {
+     "name": "[J11] · 交叉审核完成(R05/R02 双通道,零未审)",
+     "ok": true,
+     "evidence": "{'remain': 0}"
+    },
+    {
+     "name": "[J11] 流①批准结转 → 到结账门",
+     "ok": true,
+     "evidence": "{'w': 'WAITING_HUMAN', 'cur': 'close', 'http': 200}"
+    },
+    {
+     "name": "[J11] 驳回结账 → CANCELLED(已过账不回滚)",
+     "ok": true,
+     "evidence": "{'w': 'CANCELLED', 'http': 200}"
+    },
+    {
+     "name": "[J11] 驳回后期间未推进(仍 202604)",
+     "ok": true,
+     "evidence": "202604"
+    },
+    {
+     "name": "[J11] 终态放行:同期间重发起 201",
+     "ok": true,
+     "evidence": "{'status': 201}"
+    },
+    {
+     "name": "[J11] 门快照标记 alreadyCarriedForward + 指向已有凭证",
+     "ok": true,
+     "evidence": "{'kind': 'carry_forward_preview', 'preview': {'period': '202604', 'separateIncomeCost': False, 'vouchers': [{'title': '结转全部损益', 'entries': [{'summary': '结转 主营业务收入', 'accountCode': '5001', 'accountName': '主营业务收入', 'debit': 1130, 'credit': 0}, {'summary': '结转 主营业务收入 至本年利润', 'accountCode': '3103', 'acc"
+    },
+    {
+     "name": "[J11] 幂等跳过:步骤 DONE kind=already_carried_forward",
+     "ok": true,
+     "evidence": "DONE"
+    },
+    {
+     "name": "[J11] 批准结账 → COMPLETED(重做之路打通)",
+     "ok": true,
+     "evidence": "{'w': 'COMPLETED', 'http': 200}"
+    },
+    {
+     "name": "[J11] 结转凭证未重复生成",
+     "ok": true,
+     "evidence": "{'before': 4, 'after': 4}"
+    },
+    {
+     "name": "[J11] 重做完成期间推进 → 202605",
+     "ok": true,
+     "evidence": "202605"
+    }
+   ]
+  },
+  {
+   "name": "J1 主数据建账守卫",
+   "passed": 9,
+   "total": 9,
+   "failed": [],
+   "checks": [
+    {
+     "name": "[J12] · 建账 201",
+     "ok": true,
+     "evidence": "{'status': 201, 'asid': 'as_muv53v26'}"
+    },
+    {
+     "name": "[J12] 蒸馏入库 201:v1 CPA甲 + source_trace",
+     "ok": true,
+     "evidence": "{'status': 201, 'v': 1, 'by': '注册会计师-keel-甲'}"
+    },
+    {
+     "name": "[J12] 蒸馏规则不可原地改(PUT 400)",
+     "ok": true,
+     "evidence": "400"
+    },
+    {
+     "name": "[J12] 缺 CPA 签字 → 400 TEMPLATE_SIGNATURE_REQUIRED",
+     "ok": true,
+     "evidence": "400"
+    },
+    {
+     "name": "[J12] 升版 = 新版本 v2",
+     "ok": true,
+     "evidence": "{'status': 201, 'v': 2}"
+    },
+    {
+     "name": "[J12] 升版后 v1 仍是 CPA甲、ARCHIVED(M4b-D1 签字分离)",
+     "ok": true,
+     "evidence": "{'st': 'ARCHIVED', 'by': '注册会计师-keel-甲'}"
+    },
+    {
+     "name": "[J12] 回滚 v3 签字=上一版 CPA甲",
+     "ok": true,
+     "evidence": "{'http': 200, 'by': '注册会计师-keel-甲'}"
+    },
+    {
+     "name": "[J12] 版本链 3 节点签字 [甲,乙,甲] 无断裂",
+     "ok": true,
+     "evidence": "{'n': 3, 'brokenAt': None}"
+    },
+    {
+     "name": "[J12] 审计哈希链 chainValid / unchained=0",
+     "ok": true,
+     "evidence": "{'verify': True, 'chainValid': True, 'breakpointId': None, 'checked': 572, 'unchained': 0, 'headHash': 'c33b574dc53e33770fba74ef6f9428c7bd7a297ad3d9e4c59d91a02245df4973'}"
+    }
+   ]
+  },
+  {
+   "name": "UI 冒烟(壳调)",
+   "passed": 0,
+   "total": 1,
+   "failed": [
+    "[UI] 冒烟(退出码=1)"
+   ],
+   "checks": [
+    {
+     "name": "[UI] 冒烟(退出码=1)",
+     "ok": false,
+     "evidence": "elapsed=45.2s | /11] [msp] › tests\\msp.spec.ts:57:1 › ⑩ 设置: 已结账期间列表(202601/202602)\n  1 failed\n    [msp] › tests\\msp.spec.ts:17:1 › ③ 凭证: 列表加载且含凭证号 ───────────────────────────────────────────────\n  10 passed (42.9s)\n\n"
+    }
+   ]
+  }
+ ],
+ "findings": []
+}

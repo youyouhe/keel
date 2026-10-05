@@ -1,0 +1,45 @@
+{
+ "name": "hr-recruiting",
+ "createdAt": "2026-10-04 11:56",
+ "env": {
+  "dev": "http://192.168.8.181:8901",
+  "test": ""
+ },
+ "envAuth": {
+  "accounts": {
+   "13800000001": {
+    "password": "demo123",
+    "username": "13800000001"
+   },
+   "13800000002": {
+    "password": "demo123",
+    "username": "13800000002"
+   },
+   "13800000003": {
+    "password": "demo123",
+    "username": "13800000003"
+   },
+   "13800000004": {
+    "password": "demo123",
+    "username": "13800000004"
+   },
+   "13800000005": {
+    "password": "demo123",
+    "username": "13800000005"
+   },
+   "13800000006": {
+    "password": "demo123",
+    "username": "13800000006"
+   }
+  },
+  "loginBody": {
+   "password": "{password}",
+   "phone": "{username}"
+  },
+  "path": "/api/v1/auth/login",
+  "roleField": "roleCode",
+  "tokenField": "token",
+  "type": "credentials"
+ },
+ "issueRepo": "wangjiansudi-hash/hr-recruiting"
+}

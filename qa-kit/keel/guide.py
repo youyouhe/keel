@@ -65,6 +65,19 @@ GUIDE = """# Keel 快速上手(给 agent / 测试工程师)
 
   ⚠ 未配 envAuth 时 as_role 报 ENV_AUTH_MISSING(E3), 不做静默 fallback。
 
+## Client API 参考(journeys.py 里的 api 对象)
+- 获取角色客户端: `R02 = api.as_role('key')` — 返回**独立副本**(多角色互不干扰)
+- 请求方法: `api.get(path, params={})` / `api.post(path, body={...})` / `api.put` / `api.delete`
+  - 也支持 requests 风格: `api.post(path, json={...})`
+- 响应对象 `r`: `r.status`(精确 HTTP 状态码, 201/204 不归一化) ·
+  `r.data`(解析后的 JSON) · `r.json`(等价 r.data, 属性非方法) · `r.ok`(2xx)
+- 预期失败探针: `err = api.try_('POST', path, body=...)` —
+  非 2xx 返回 `err.status / err.code / err.message`; 2xx 返回 None。
+  注意: v0.10 起 4xx/5xx **不再抛异常**, 直接 `r.status` 断言即可, try_ 可不用
+- 分段注册: `api.step("J1 线索", "建档", fn)` — 段名自由, 连续同名自动合并,
+  `--section` 过滤用子串匹配段名
+- 报工: `run.check(名, bool, 证据)` / `run.diff_zero / conserved / delta_is / all_matched`
+
 ## 常见坑
 - **信任边界(必读)**: `keel_file_put` 可写 `tests/journeys.py`——而 journeys.py 会被
   Keel 动态 import 执行。因此 Bearer token 持有者 = 可在 Keel 服务器上执行任意代码。

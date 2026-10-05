@@ -1,13 +1,17 @@
 {
  "baseline": null,
  "lastRun": {
-  "time": "2026-10-04 03:02:03",
+  "time": "2026-10-05 19:02:34",
   "journey": "miaosuanpan 穿行",
-  "ok": true,
-  "passed": 9,
-  "total": 9,
-  "abortedAt": null,
-  "report": "projects\\miaosuanpan\\reports\\report-20261004-030203.json"
+  "ok": false,
+  "passed": 40,
+  "total": 41,
+  "abortedAt": "UI冒烟/[UI] 冒烟(退出码=1)",
+  "report": "projects\\miaosuanpan\\reports\\report-20261005-190234.json",
+  "breakdown": {
+   "api": "40/40",
+   "ui": "0/1"
+  }
  },
  "contractVersion": 0,
  "runs": [
@@ -58,6 +62,36 @@
    "ok": true,
    "passed": 9,
    "total": 9
+  },
+  {
+   "time": "2026-10-05 18:21:53",
+   "ok": false,
+   "passed": 8,
+   "total": 9
+  },
+  {
+   "time": "2026-10-05 18:29:43",
+   "ok": false,
+   "passed": 22,
+   "total": 38
+  },
+  {
+   "time": "2026-10-05 18:40:13",
+   "ok": false,
+   "passed": 25,
+   "total": 41
+  },
+  {
+   "time": "2026-10-05 18:44:16",
+   "ok": false,
+   "passed": 31,
+   "total": 41
+  },
+  {
+   "time": "2026-10-05 19:02:34",
+   "ok": false,
+   "passed": 40,
+   "total": 41
   }
  ]
 }
